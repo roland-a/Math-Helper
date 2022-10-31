@@ -1,0 +1,342 @@
+body {
+	background-color: #dcdcdc
+}
+
+.TypeBox {
+	background-color: #fff;
+	gap: 2px;
+	justify-content: left
+}
+
+.TypeBox:empty:after {
+	background-color: gray;
+	content: "   "
+}
+
+
+.And>:not(:first-child):before {
+	content: "∧"
+}
+
+.Or>:not(:first-child):before {
+	content: "∨"
+}
+
+.Not::before{
+    content: "¬";
+}
+
+.Any,.All{
+    align-items: flex-end;
+}
+.Any::before{
+    content: "∃";
+}
+.Any>:first-child{
+    font-size: 50%;
+}
+
+.All{
+    align-items: flex-end;
+}
+.All::before{
+    content: "∀";
+}
+.All>:first-child{
+    font-size: 50%;
+}
+
+
+.Add>:not(:first-child):before {
+	content: "+"
+}
+
+.Neg>:first-child:before {
+	content: "-"
+}
+
+.Sub>:not(:first-child):before {
+	align-items: flex-end;
+	content: "-"
+}
+
+.Mult>:not(:first-child):before {
+	content: "×"
+}
+
+.Div {
+	display: inline-flex;
+	flex-direction: column
+}
+
+.Div>:nth-child(n) {
+	font-size: 70%
+}
+
+.Div>:first-child {
+	border-bottom: 1px solid #000;
+	width: 100%
+}
+
+.Pow {
+	align-items: flex-end
+}
+
+.Pow>:nth-child(2),
+.Roots>:first-child {
+	font-size: 80%;
+	padding-bottom: .7em
+}
+
+.Roots>:first-child {
+	-webkit-transform: translateX(3px);
+	transform: translateX(3px)
+}
+
+.Roots>:nth-child(2)>:first-child {
+	border-top: 1px solid #000
+}
+
+.Roots>:nth-child(2):before {
+	content: "√"
+}
+
+.Abs {
+	border-left: 1px solid #000;
+	border-right: 1px solid #000;
+	max-width: -webkit-fit-content;
+	max-width: -moz-fit-content;
+	max-width: fit-content;
+	padding-left: 3px;
+	padding-right: 3px
+}
+
+.Eq>:not(:first-child):before {
+	content: "="
+}
+
+.Assign {
+	align-items: flex-end
+}
+
+.Assign>:nth-child(2) {
+	font-size: 50%
+}
+
+.Limit:before {
+	content: "lim"
+}
+
+.Limit>:first-child {
+	font-size: 70%
+}
+
+.Limit>:first-child>:first-child:after {
+	content: "→"
+}
+
+.Derive {
+	align-items: flex-end
+}
+
+.Derive>:first-child:after {
+	content: "'"
+}
+
+.Derive>:nth-child(2) {
+	flex-direction: column;
+	font-size: 70%
+}
+
+.Integrate:before {
+	content: "∫"
+}
+
+.Integrate>:first-child {
+	flex-direction: column;
+	font-size: 50%
+}
+
+.Integrate>:nth-child(2):after {
+	content: "d"
+}
+
+span {
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	white-space: pre
+}
+
+.Screen {
+	align-items: flex-start;
+	gap: 10em;
+	justify-content: left;
+	margin-left: 1em
+}
+
+.Keyboard,
+.Left {
+	align-items: flex-start;
+	flex-direction: column
+}
+
+.Sections {
+	gap: 2px;
+	width: 100%
+}
+
+.Section {
+	border: 1px solid #000;
+	margin: 1px;
+	width: 100%
+}
+
+.Buttons {
+	align-items: flex-start;
+	flex-direction: column;
+	gap: 2px
+}
+
+.Row {
+	gap: 2px
+}
+
+button {
+	font-size: large;
+	height: 50px;
+	width: 80px
+}
+
+.MainExpr {
+	background-color: #fff;
+	font-size: xx-large;
+	justify-content: left;
+	width: 100%
+}
+
+.Keyboard .Div:nth-child(n) {
+	font-size: larger
+}
+
+.Formulas {
+	background-color: #fff;
+	flex-direction: column;
+	font-size: x-large;
+	gap: 10px
+}
+
+.Formulas>:first-child {
+	align-items: flex-start;
+	flex-direction: row;
+	gap: 30px
+}
+
+.Formulas>:first-child>:nth-child(n) {
+	flex-direction: column;
+	gap: 5px
+}
+
+.NotSelected {
+	border: 1.5px solid transparent
+}
+
+.Selected {
+	border: 1.5px solid #000
+}
+
+.SubSelected {
+	border: 1.5px solid red
+}
+
+.CursorBlinkMiddle:after {
+	-webkit-animation: CursorMiddleBlink 1s step-start infinite;
+	animation: CursorMiddleBlink 1s step-start infinite;
+	content: " | "
+}
+
+@-webkit-keyframes CursorMiddleBlink {
+	to {
+		opacity: 1
+	}
+
+	50% {
+		opacity: 0
+	}
+}
+
+@keyframes CursorMiddleBlink {
+	to {
+		opacity: 1
+	}
+
+	50% {
+		opacity: 0
+	}
+}
+
+.CursorLeft {
+	border-left: 1px solid grey;
+	border-right: 1px solid transparent;
+	box-sizing: border-box
+}
+
+.CursorLeft,
+.CursorRight {
+	-webkit-animation: CursorBlink 1s step-end infinite;
+	animation: CursorBlink 1s step-end infinite
+}
+
+.CursorRight {
+	border-left: 1px solid transparent;
+	border-right: 1px solid grey
+}
+
+@-webkit-keyframes CursorBlink {
+	50% {
+		border-left: 1px solid transparent;
+		border-right: 1px solid transparent
+	}
+}
+
+@keyframes CursorBlink {
+	50% {
+		border-left: 1px solid transparent;
+		border-right: 1px solid transparent
+	}
+}
+
+.CursorNone {
+	border-left: 1px solid transparent;
+	border-right: 1px solid transparent
+}
+
+.Wrapped {
+	align-items: stretch;
+	display: flex;
+	padding-left: 8px;
+	padding-right: 8px;
+	position: relative
+}
+
+.Wrapped:before {
+	left: 0
+}
+
+.Wrapped:after,
+.Wrapped:before {
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 14 50' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M14 2a10 20 0 0 0 0 46' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-size: auto 100%;
+	content: "";
+	height: 100%;
+	position: absolute;
+	width: 6px
+}
+
+.Wrapped:after {
+	right: 0;
+	-webkit-transform: scaleX(-1);
+	transform: scaleX(-1)
+}
