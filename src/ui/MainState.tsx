@@ -15,6 +15,7 @@ import { Assign } from "../expr/calculus/Assign";
 import { Integrate } from "../expr/calculus/Integrate";
 import { CloneMap } from "../misc/Clone";
 import { PreJSX } from "./PreJsx";
+import { ExprBase } from "../expr/ExprBase";
 
 export class MainState {
     private main: Expr = new TypeBox()
@@ -92,7 +93,7 @@ export class MainState {
             }
         )
 
-        d.forEach((c,i)=>{
+        d.forEach(c=>{
             if (typeof c == "string") return
 
             if (c.nthChild == null) return
@@ -138,7 +139,6 @@ export class MainState {
         );
     }
 
-
     private manipExprInFormula(d: PreJSX) {
         if (d.e instanceof TypeBox){
             this.manipTypebox(d)
@@ -151,7 +151,6 @@ export class MainState {
             this.manipExprInFormula(c)
         })
     }
-
 
     private manipTypebox(d: PreJSX) {
         let t = d.e as TypeBox
@@ -192,6 +191,9 @@ export class MainState {
 
         if (d.e instanceof TypeBox){
             this.manipTypebox(d)
+        }
+        else {
+            this.manipExprInFormula(d)
         }
 
         if (parent == this.typeBox && i == this.typeBoxPos-1){
@@ -274,98 +276,49 @@ export class MainState {
     }
 
     private next(side: Side) {
-        let contents = (e: Expr): (Expr|char)[] =>{
-            if (e instanceof TypeBox){
-                return e.contents
-            }
-            return e.children.filter(c=>c instanceof TypeBox).toArray()
+        this.lastUpdated = Date.now()
+
+        let list = this.makeNextItemsList(side)
+
+        if (list.length == 0) return
+
+        while (!(list[0].parent instanceof TypeBox)){
+            rotate(list)
         }
 
-        let parent = (e: Expr): [Expr,int]|null=>{
-            let find = (p: Expr): [Expr,int]|null=>{
-                for (let i = 0; i < contents(p).length; i++){
-                    let c = contents(p)[i]
-    
-                    if (c == e) return [p, i]
-    
-                    if (typeof c == "string") continue
-    
-                    if (find(c) != null){
-                        return find(c)
-                    }
+        this.typeBox = list[0].parent
+        this.typeBoxPos = list[0].i
+    }
+
+    private makeNextItemsList(side: Side): {child:Expr, i:int, parent:Expr}[]{
+        let result: {child:Expr, i:int, parent:Expr}[] = []
+        
+        iterTree(
+            this.main,
+            e=>{
+                if (e instanceof TypeBox){
+                    return [...e.contents, ""]
                 }
-                return null
-            }
-    
-            return find(this.main) ?? this.normalFormulas.map(c=>find(c)).find(c=>c!=null) ?? null
+                return e.children.toArray()
+            },
+            (c,i,p)=>result.push({child:c, i:i, parent:p})
+        )
+        if (side == Side.LEFT){
+            result.reverse()
         }
-
-        let maxI = (e: Expr):int=>{
-            if (e instanceof TypeBox) return e.contents.length+1
-    
-            return e.children.filter(c=>c instanceof TypeBox).size
-        }
-
-        if (this.typeBox == null) return
-
-        let r = this.typeBox as Expr
-        let i = this.typeBoxPos + side.val()
-
-        let exited = false
-
+        
+        //rotates the list until parent is the current typebox and position
         while (true){
-            if (i >= maxI(r)){
-                [r, i] = parent(r) ?? [r, -1]
-
-                i+=1
-                
-                exited = true
-                continue
-            }
-            if (i < 0){
-                [r, i] = parent(r) ?? [r, maxI(r)]
-
-                if (!(r instanceof TypeBox)) i-=1
-
-                exited = true
-                continue
-            }
-
-            if (r instanceof TypeBox){
-                let maybeInner = (() => {
-                    if (side == Side.RIGHT) {
-                        return contents(r)[i - 1]
-                    }
-                    return contents(r)[i];
-                })()
-    
-                if (!(typeof maybeInner == "string") && !exited){
-                    r = maybeInner
-    
-                    if (side == Side.LEFT){
-                        i = maxI(r)-1
-                    } else {
-                        i = 0
-                    }
-                    continue
-                }
+            if (result[0].parent == this.typeBox && result[0].i == this.typeBoxPos){
+                //rotates it one last time
+                rotate(result)
                 break
             }
             else {
-                r = r.children.filter(c=>c instanceof TypeBox).get(i)!
-
-                if (side == Side.LEFT){
-                    i = maxI(r)-1
-                } else {
-                    i = 0
-                }
+                rotate(result)
             }
         }
-
-        this.typeBox = r
-        this.typeBoxPos = i
-
-        this.lastUpdated = Date.now()
+        return result
     }
 
     private enter() {
@@ -410,6 +363,22 @@ export class MainState {
 
         return result;
     }
+}
+
+function iterTree<T>(root: T, children: (root:T)=>T[], forEachChild: (child: T, index:int, parent:T)=>void){
+    let i = 0
+
+    children(root).forEach((c,i)=>{
+        forEachChild(c, i, root)
+
+        iterTree(c, children, forEachChild)
+    })
+}
+
+function rotate<T>(list: T[]){
+    if (list.length == 0) return
+
+    list.push(list.shift()!)
 }
 
 
