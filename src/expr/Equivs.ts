@@ -74,9 +74,8 @@ function superFlat(e: any): any[]{
     return result
 } 
 
-export function get(selected: Expr, subSelected: Set<int>): [Expr[], Expr[]]{
-    let normal = [] as Expr[]
-    let redundants = [] as Expr[]
+export function get(selected: Expr, subSelected: Set<int>): Expr[]{
+    let result = [] as Expr[]
 
     list.forEach(c=>{
         try{
@@ -85,10 +84,12 @@ export function get(selected: Expr, subSelected: Set<int>): [Expr[], Expr[]]{
             if (e == null) return
 
             if (c.type() == "normal"){
-                normal.push(e)
+                //normal equivalancies shows first
+                result.unshift(e)
             }
             else {
-                redundants.push(e)
+                //redundant equivalencies shows last
+                result.push(e)
             }
         }
         catch(e){
@@ -96,7 +97,7 @@ export function get(selected: Expr, subSelected: Set<int>): [Expr[], Expr[]]{
         }
     })
 
-    return [normal, redundants]
+    return result
 }
 
 

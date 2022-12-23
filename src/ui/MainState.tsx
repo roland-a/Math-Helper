@@ -28,8 +28,7 @@ export class MainState {
     private selectedExpr: Path | null = null
     private subSelectedExpr: Set<int> = Set()
 
-    private normalFormulas: Expr[] = []
-    private redundantFormulas: Expr[] = []
+    private formulas: Expr[] = []
 
     private selectedFormula: int | null = null
 
@@ -113,7 +112,7 @@ export class MainState {
     }
 
     displayFormulas(): JSX.Element {
-        let l = this.normalFormulas.map((c, i) => {
+        let l = this.formulas.map((c, i) => {
             let result: PreJSX = c.toPreJSX()
 
             if (i == this.selectedFormula) {
@@ -208,7 +207,7 @@ export class MainState {
     private updateFormulas(): void {
         if (this.selectedExpr == null) return
 
-        [this.normalFormulas, this.redundantFormulas] = get(this.main.getFromPath(this.selectedExpr), this.subSelectedExpr);
+        this.formulas = get(this.main.getFromPath(this.selectedExpr), this.subSelectedExpr);
         this.selectedFormula = null;
     }
 
@@ -329,17 +328,13 @@ export class MainState {
             this.lastUpdated = Date.now();
         }
         else if (this.selectedFormula != null && this.selectedExpr != null) {
-            
-            if (this.selectedFormula < this.normalFormulas.length){
-                this.main = this.main.setFromPath(this.selectedExpr, this.normalFormulas[this.selectedFormula].parse());
-            }
-            else {
-                this.main = this.main.setFromPath(this.selectedExpr, this.redundantFormulas[this.selectedFormula-this.normalFormulas.length].parse());
-            }
+            this.main = this.main.setFromPath(
+                this.selectedExpr, 
+                this.formulas[this.selectedFormula].parse()
+            );
 
             this.selectedExpr = null;
-            this.normalFormulas = [];
-            this.redundantFormulas = []
+            this.formulas = []
 
             this.lastUpdated = Date.now();
         }
@@ -356,7 +351,7 @@ export class MainState {
         result.selectedExpr = this.selectedExpr;
         result.subSelectedExpr = this.subSelectedExpr;
 
-        result.normalFormulas = this.normalFormulas.map(c => c.clone(cloneMap));
+        result.formulas = this.formulas.map(c => c.clone(cloneMap));
         result.selectedFormula = this.selectedFormula;
 
         result.lastUpdated = this.lastUpdated;
