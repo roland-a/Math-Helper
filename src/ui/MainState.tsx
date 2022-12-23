@@ -14,6 +14,7 @@ import { Derive } from "../expr/calculus/Derive";
 import { Assign } from "../expr/calculus/Assign";
 import { Integrate } from "../expr/calculus/Integrate";
 import { CloneMap } from "../misc/Clone";
+import { PreJSX } from "./PreJsx";
 
 export class MainState {
     private main: Expr = new TypeBox()
@@ -34,208 +35,176 @@ export class MainState {
     lastUpdated = 0;
 
     displayMainExpr(): JSX.Element {
-        let e = this.main.getFromPath(this.zoomPath)
+        return this.main
+            .getFromPath(this.zoomPath)
+            .toPreJSX()
+            .display(
+                r=>this.manipExpr(r, this.zoomPath)
+            )
+    }
 
-        return <span className="MainExpr">
-            {e.display(this.exprDisplayer(e, this.zoomPath))}
-        </span>;
+    
+    private manipExpr(d: PreJSX, p: Path) {
+        if (d.e instanceof TypeBox){
+            this.manipTypebox(d)
+            return
+        }
+
+        d.addLeftClick(
+            () => {
+                if (Date.now() - this.lastUpdated < 10) return
+                this.lastUpdated = Date.now()
+    
+                if (this.selectedExpr == p) return
+    
+                this.selectedExpr = p;
+                this.subSelectedExpr = Set();
+    
+                this.updateFormulas();
+    
+                let m = this.main.getFromPath(this.selectedExpr)
+    
+                console.log(m, typeof m)
+            }
+        )
+
+        d.addRightClick(
+            () => {
+                if (Date.now() - this.lastUpdated < 10) return
+                this.lastUpdated = Date.now()
+                    
+                if (p == Path.EMPTY)
+                    return false;
+    
+                if (this.selectedExpr != p.pop())
+                    return false;
+    
+                if (this.subSelectedExpr.has(p.last())) {
+                    this.subSelectedExpr = this.subSelectedExpr.remove(p.last());
+                }
+                else {
+                    this.subSelectedExpr = this.subSelectedExpr.add(p.last());
+                }
+    
+                this.updateFormulas();
+    
+                this.lastUpdated = Date.now();
+            }
+        )
+
+        d.forEach((c,i)=>{
+            if (typeof c == "string") return
+
+            if (c.nthChild == null) return
+
+            this.manipExpr(c, p.add(c.nthChild))
+        })
+
+        if (this.selectedExpr == p) {
+            d.wrap("Selected")
+            return;
+        }
+        if (p != Path.EMPTY && p.pop() == this.selectedExpr && this.subSelectedExpr.has(p.last())) {
+            d.wrap("SubSelected")
+            return;
+        }
+        d.wrap("NotSelected")
     }
 
     displayFormulas(): JSX.Element {
         let l = this.normalFormulas.map((c, i) => {
-            let onClick = () => {
-                if (this.selectedFormula == i)
-                    return;
-
-                this.selectedFormula = i;
-
-                this.lastUpdated = Date.now();
-            };
+            let result: PreJSX = c.toPreJSX()
 
             if (i == this.selectedFormula) {
-                return <span className="Selected">{c.display(this.formulaDisplayer(c))}</span>
+                result.wrap("Selected")
             }
             else {
-                return <span className="NotSelected" onClick={onClick}>{c.display(this.formulaDisplayer(c))}</span>
+                result.wrap("NotSelected")
             }
-        });
 
-        let r = this.redundantFormulas.map((c, i) => {
-            let onClick = () => {
-                if (this.selectedFormula == i + this.normalFormulas.length) return
+            result.addLeftClick(
+                () => {                
+                    this.selectedFormula = i;
+                }    
+            )
 
-                this.selectedFormula = i + this.normalFormulas.length
-
-                this.lastUpdated = Date.now();
-            };
-
-            if (i + this.normalFormulas.length == this.selectedFormula) {
-                return <span className="Selected">{c.display(this.formulaDisplayer(c))}</span>
-            }
-            else {
-                return <span className="NotSelected" onClick={onClick}>{c.display(this.formulaDisplayer(c))}</span>
-            }
+            return result.display(d=>this.manipExprInFormula(d))
         });
 
         return (
             <span className="Formulas">
-                Equivalences
-                <span>
-                    <span>{l}</span>
-                    <span>{r}</span>
-                </span>
+                {l}
             </span>
         );
     }
 
-    private exprDisplayer(e: Expr, p: Path): DisplayMod {
-        if (e instanceof TypeBox) {
-            return this.typeBoxDisplayer(null, 0, e);
+
+    private manipExprInFormula(d: PreJSX) {
+        if (d.e instanceof TypeBox){
+            this.manipTypebox(d)
+            return
         }
 
-        return {
-            wrap: (jsx: JSX.Element): JSX.Element => {
-                let onClick = () => {
-                    if (Date.now() - this.lastUpdated < 10) return
+        d.forEach(c=>{
+            if (typeof c == "string") return
 
-                    if (this.selectedExpr == p) return
-
-                    this.selectedExpr = p;
-                    this.subSelectedExpr = Set();
-
-                    this.updateFormulas();
-
-                    this.lastUpdated = Date.now()
-
-                    let m = this.main.getFromPath(this.selectedExpr)
-
-                    console.log(m, typeof m)
-                };
-
-                let onRightClick = () => {
-                    if (Date.now() - this.lastUpdated < 10)
-                        return;
-
-                    if (p == Path.EMPTY)
-                        return false;
-
-                    if (this.selectedExpr != p.pop())
-                        return false;
-
-                    if (this.subSelectedExpr.has(p.last())) {
-                        this.subSelectedExpr = this.subSelectedExpr.remove(p.last());
-                    }
-                    else {
-                        this.subSelectedExpr = this.subSelectedExpr.add(p.last());
-                    }
-
-                    this.updateFormulas();
-
-                    this.lastUpdated = Date.now();
-                };
-
-                if (this.selectedExpr == p) {
-                    return <span className="Selected">{jsx}</span>;
-                }
-                if (p != Path.EMPTY && p.pop() == this.selectedExpr && this.subSelectedExpr.has(p.last())) {
-                    return <span className="SubSelected" onContextMenu={onRightClick}>{jsx}</span>;
-                }
-
-                return <span className="NotSelected" onClick={onClick} onContextMenu={onRightClick}>{jsx}</span>;
-            },
-
-            next: (i: int, e: Expr) => {
-                return this.exprDisplayer(e, p.add(i));
-            }
-        };
+            this.manipExprInFormula(c)
+        })
     }
 
-    private typeBoxDisplayer(parent: Expr | null, i: int | null, content: Expr | null): DisplayMod {
-        return {
-            wrap: (jsx: JSX.Element): JSX.Element => {
-                let onContentClick = () => {
-                    if (Date.now() - this.lastUpdated < 10)
-                        return;
 
-                    if (!(parent instanceof TypeBox))
-                        return;
-                    if (this.typeBox == parent && this.typeBoxPos == i! + 1)
-                        return;
+    private manipTypebox(d: PreJSX) {
+        let t = d.e as TypeBox
 
-                    this.typeBox = parent;
-                    this.typeBoxPos = i! + 1;
+        d.addLeftClick(
+            ()=>{
+                console.log("y")
 
-                    this.lastUpdated = Date.now();
-                };
-
-                let onEmptyClick = () => {
-                    if (Date.now() - this.lastUpdated < 10)
-                        return;
-
-                    if (!(content instanceof TypeBox))
-                        return;
-
-                    if (this.typeBox == content && this.typeBoxPos == 0)
-                        return;
-
-                    this.typeBox = content;
-                    this.typeBoxPos = 0;
-
-                    this.lastUpdated = Date.now();
-                };
-
-                if (this.typeBox != content && content instanceof TypeBox && content.contents.length == 0) {
-                    jsx = <span onClick={onEmptyClick} className="TypeBox"></span>;
-                }
-                if (this.typeBox == content && content instanceof TypeBox && content.contents.length == 0) {
-                    jsx = <span onClick={onEmptyClick} className="TypeBox"><span className="CursorBlinkMiddle"></span></span>;
-                }
-
-                if (parent instanceof TypeBox && content instanceof TypeBox) {
-                    jsx = <span className="Wrapped">{jsx}</span>;
-                }
-                if (content != null && content == this.typeBox) {
-                    jsx = <span className="Selected">{jsx}</span>;
-                }
-
-                if (parent != null && parent == this.typeBox && this.typeBoxPos == i) {
-                    jsx = <span className="CursorLeft" onClick={onContentClick}>{jsx}</span>;
-                }
-                else if (parent != null && parent == this.typeBox && this.typeBox == parent && i == this.typeBox.contents.length - 1 && this.typeBoxPos == this.typeBox!.contents.length) {
-                    jsx = <span className="CursorRight" onClick={onContentClick}>{jsx}</span>;
-                }
-                else if (parent != null) {
-                    jsx = <span className="CursorNone" onClick={onContentClick}>{jsx}</span>;
-                }
-
-                return jsx;
-            },
-
-            next: (i: int, e: Expr) => {
-                return this.typeBoxDisplayer(content, i, content == e ? null : e);
+                if (Date.now() - this.lastUpdated < 10) return
+                this.lastUpdated = Date.now()
+    
+                this.typeBox = t
+                this.typeBoxPos = t.contents.length
             }
-        };
-    }
+        )
 
-    private formulaDisplayer(e: Expr): DisplayMod {
-        if (e instanceof TypeBox) {
-            return this.typeBoxDisplayer(null, null, e);
+        if (t == this.typeBox){ 
+            d.wrap("Selected");
+
+            if (this.typeBoxPos == 0){
+                d.wrap("CursorLeft")
+            }
         }
 
-        return {
-            wrap: (jsx: JSX.Element): JSX.Element => {
-                return jsx;
-            },
-
-            next: (i: int, e: Expr) => {
-                return this.formulaDisplayer(e);
-            }
-        };
+        d.forEach((c,i)=>this.typeBoxContentManip(t, c, i))
     }
+
+    private typeBoxContentManip(parent: TypeBox, d: PreJSX, i: int){
+        d.addLeftClick(
+            ()=>{
+                if (Date.now() - this.lastUpdated < 10) return
+                this.lastUpdated = Date.now()
+    
+                this.typeBox = parent
+                this.typeBoxPos = i+1
+            }
+        )
+
+        if (d.e instanceof TypeBox){
+            this.manipTypebox(d)
+        }
+
+        if (parent == this.typeBox && i == this.typeBoxPos-1){
+            d.wrapOuter("CursorRight")
+        }
+        else {
+            d.wrap("CursorNone")
+        }
+    }
+
 
     private updateFormulas(): void {
-        if (this.selectedExpr == null)
-            return;
+        if (this.selectedExpr == null) return
 
         [this.normalFormulas, this.redundantFormulas] = get(this.main.getFromPath(this.selectedExpr), this.subSelectedExpr);
         this.selectedFormula = null;

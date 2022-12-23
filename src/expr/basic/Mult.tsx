@@ -19,6 +19,7 @@ import { Limit } from "../calculus/Limit";
 import { Absorber } from "../../equivalences/Absorber";
 import { Anhiliator } from "../../equivalences/Anhiliator";
 import { isConst } from "../helper";
+import { PreJSX } from "../../ui/PreJsx";
 
 const integrate = new class extends EquivGen{
     generate(selected: Expr, subSelected: Set<number>): Expr|null {
@@ -100,17 +101,19 @@ export class Mult extends ExprBase{
         return precident(this, e)
     }
 
-    display(d: DisplayMod): JSX.Element {
+    toPreJSX(): PreJSX {
         if (this.children.size==2 && typeof this.get(0) == "number" && typeof this.get(1) == "string"){
-            return d.wrap(
-                <span>
-                    <>{this.get(0).display(d.next(0, this.get(0)))}</>
-                    <>{this.get(1).display(d.next(1, this.get(1)))}</>
-                </span>
+            return new PreJSX(
+                this, 
+                "",
+                [
+                    this.get(0).toPreJSX().setNthChild(0), 
+                    this.get(1).toPreJSX().setNthChild(1)
+                ]
             )
         }
 
-        return super.display(d)
+        return super.toPreJSX()
     }
 }
 

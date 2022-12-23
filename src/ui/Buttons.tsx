@@ -20,6 +20,7 @@ import { And } from "../expr/boolean/And";
 import { Any } from "../expr/boolean/Any";
 import { All } from "../expr/boolean/All";
 import { Not } from "../expr/boolean/Not";
+import { PreJSX } from "./PreJsx";
 
 export class KeyBoards{
     private readonly fn: (_:Expr|char)=>void
@@ -160,23 +161,17 @@ class Button{
 
                 if (typeof r == "string") return <>{r}</>
 
-                return r.display(typeBoxWrapper(r))
+                return r.toPreJSX().display(manip)
             })()}
         </button>
     }
 }
 
-function typeBoxWrapper(e: Expr){
-    return {
-        wrap: (jsx: JSX.Element): JSX.Element => {
-            if (e instanceof TypeBox){
-                return <span>☐</span>
-            }
-            return jsx
-        },
-
-        next: (i:int, e:Expr) => {
-            return typeBoxWrapper(e)
-        }
-    };
+function manip(p: PreJSX){
+    if (p.e instanceof TypeBox){
+        p.override("☐")
+    }
+    else {
+        p.forEach(c=>manip(c))
+    }
 }

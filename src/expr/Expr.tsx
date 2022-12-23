@@ -4,6 +4,7 @@ import { Class } from "../misc/Class";
 import { cloneHelper, CloneMap } from "../misc/Clone";
 import { int } from "../misc/Int";
 import { Path } from "../misc/Path";
+import { PreJSX } from "../ui/PreJsx";
 
 
 export interface Expr{
@@ -21,7 +22,7 @@ export interface Expr{
     clone(cloneMap: CloneMap): this
     parse(): Expr
 
-    display(d: DisplayMod): JSX.Element
+    toPreJSX(): PreJSX
 }
 
 export type DisplayMod = {
@@ -81,8 +82,12 @@ String.prototype.clone = function():String{
 String.prototype.parse = function():Expr{
     return this
 }
-String.prototype.display = function(d: DisplayMod):JSX.Element{
-    return d.wrap(<span>{this}</span>)
+String.prototype.toPreJSX = function(): PreJSX{
+    return new PreJSX(
+        this,
+        "var",
+        JSON.stringify(this)
+    )
 }
 
 Number.prototype.type = "number"
@@ -116,8 +121,12 @@ Number.prototype.clone = function():Number{
 Number.prototype.parse = function():Expr{
     return this
 }
-Number.prototype.display = function(d: DisplayMod):JSX.Element{
-    return d.wrap(<span>{this as number}</span>)
+Number.prototype.toPreJSX =  function(): PreJSX{
+    return new PreJSX(
+        this,
+        "Number",
+        JSON.stringify(this)
+    )
 }
 
 Boolean.prototype.type = "boolean"
@@ -151,9 +160,12 @@ Boolean.prototype.clone = function():Boolean{
 Boolean.prototype.parse = function():Expr{
     return this
 }
-Boolean.prototype.display = function(d: DisplayMod):JSX.Element{
-    return d.wrap(<span>{this ? "true" : "false"}</span>)
+Boolean.prototype.toPreJSX = function(): PreJSX{
+    return new PreJSX(
+        this,
+        "Boolean",
+        this ? "True" : "False"
+    )
 }
-
 
 

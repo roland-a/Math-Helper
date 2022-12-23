@@ -2,10 +2,10 @@ import { List } from "immutable";
 import { CloneMap } from "../misc/Clone";
 import { int } from "../misc/Int";
 import { Path } from "../misc/Path";
+import { PreJSX } from "../ui/PreJsx";
 import { E } from "./calculus/E";
 import { Infinity } from "./calculus/Infinity";
 import { DisplayMod, Expr} from "./Expr";
-import { displayHelper } from "./helper";
 import { Pi } from "./trigonometry/Pi";
 
 export type Input = {}
@@ -65,8 +65,6 @@ export abstract class ExprBase implements Expr{
 
     cssName: string = ""
 
-    cssGroupings: [int,int][] = []
-
     generallyUnambigious: boolean = false
 
     clone(cloneMap: CloneMap): this{
@@ -81,13 +79,18 @@ export abstract class ExprBase implements Expr{
         return false
     }
 
-    display(d: DisplayMod): JSX.Element {
-        return displayHelper(
+    toPreJSX(): PreJSX {
+        return new PreJSX(
             this,
             this.cssName,
-            (c,i)=>this.childAmbigious(c,i) ?? !c.generallyUnambigious,
-            d,
-            this.cssGroupings
-        )
+            this.children.toArray().map((c,i)=>
+               c.toPreJSX()
+                .setNthChild(i)
+                .wrap(
+                    "wrapped",
+                    this.childAmbigious(c,i) ?? !c.generallyUnambigious
+                )
+            )
+        );
     }
 }

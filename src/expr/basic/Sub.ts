@@ -8,7 +8,6 @@ import { Integrate } from "../calculus/Integrate"
 import { Expr } from "../Expr"
 import { ExprBase, Input } from "../ExprBase"
 import { precident } from "../precidents"
-import { Unary } from "../Unary"
 import { Add } from "./Add"
 import { Neg } from "./Neg"
 

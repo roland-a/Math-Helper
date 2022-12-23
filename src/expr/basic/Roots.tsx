@@ -1,6 +1,7 @@
 import { formula } from "../../equivalences/Formula"
 import { int } from "../../misc/Int"
 import { pool } from "../../misc/Pooler"
+import { PreJSX } from "../../ui/PreJsx"
 import { DisplayMod, Expr } from "../Expr"
 import { ExprBase, Input } from "../ExprBase"
 import { Div } from "./Div"
@@ -28,16 +29,13 @@ export class Roots extends ExprBase{
         return pool(this)
     }
 
-    display(d: DisplayMod): JSX.Element {
+    toPreJSX(): PreJSX {
+        let result = super.toPreJSX()
+
         if (this.get(0) == 2){
-            return d.wrap(
-                <span className={this.constructor.name}>
-                    <span></span>
-                    <span>{this.get(1).display(d.next(1, this.get(1)))}</span>
-                </span>
-            )
+            result.get(0).override("")
         }
 
-        return super.display(d)
+        return result;
     }   
 }

@@ -3,6 +3,7 @@ import { char } from "../misc/Char"
 import { Class } from "../misc/Class"
 import { cloneHelper, CloneMap } from "../misc/Clone"
 import { int } from "../misc/Int"
+import { PreJSX } from "../ui/PreJsx"
 import { Add } from "./basic/Add"
 import { Mult } from "./basic/Mult"
 import { Neg } from "./basic/Neg"
@@ -71,18 +72,18 @@ export class TypeBox extends ExprBase{
         return false
     }
 
-    display(d: DisplayMod): JSX.Element {
-        return d.wrap(
-            <span className="TypeBox">
-            {
-                this.contents.map((c,i)=>{
-                    if (typeof c == "string"){
-                        return d.next(i, this).wrap(<span>{c}</span>)
+    toPreJSX(): PreJSX {
+        return new PreJSX(
+            this,
+            "TypeBox",
+            this.contents.map(
+                c=>{
+                    if (typeof c != "string"){
+                        return c.toPreJSX().wrap("Wrapped", c instanceof TypeBox)
                     }
-                    return c.display(d.next(i,c))
-                })
-            }
-            </span>
+                    return new PreJSX(null, "", c)
+                }
+            )
         )
     }
 

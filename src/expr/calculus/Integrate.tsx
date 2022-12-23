@@ -10,11 +10,10 @@ import { Sub } from "../basic/Sub";
 import { Div } from "../basic/Div";
 import { Assign } from "./Assign";
 import { Derive } from "./Derive";
+import { PreJSX } from "../../ui/PreJsx";
 
 export class Integrate extends ExprBase{
     readonly cssName = "Integrate"
-
-    readonly cssGroupings = [[0,1]] as [int,int][];
 
     static equivs = ()=> [
         formula(
@@ -46,16 +45,28 @@ export class Integrate extends ExprBase{
         return false
     }
 
-    display(d: DisplayMod): JSX.Element {
-        if (this.get(0)==this.get(3) && this.get(1) == 0){
-            return d.wrap(
-                <span className={this.cssName}>
-                    <span></span>
-                    <span>{this.get(2).display(d.next(2, this.get(2)))}</span>
-                    <span>{this.get(3).display(d.next(3, this.get(3)))}</span>
-                </span>
-            )
+    toPreJSX(): PreJSX {
+        let result = new PreJSX(
+            this,
+            this.cssName,
+            [
+                new PreJSX(
+                    this,
+                    "",
+                    [
+                        this.get(0).toPreJSX().setNthChild(0),
+                        this.get(1).toPreJSX().setNthChild(1)
+                    ]
+                ),
+                this.get(2).toPreJSX().setNthChild(2),
+                this.get(3).toPreJSX().setNthChild(3)
+            ]
+        )
+
+        if (this.get(0) == this.get(3) && this.get(1) == 0){
+            result.get(0).override("")
         }
-        return super.display(d)
+    
+        return result
     }
 }

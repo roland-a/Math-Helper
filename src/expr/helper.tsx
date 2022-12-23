@@ -1,6 +1,9 @@
 import { int } from "../misc/Int"
+import { PreJSX } from "../ui/PreJsx"
 import { DisplayMod, Expr } from "./Expr"
 
+
+/*
 export function displayHelper(e: Expr, cssName: string, wrapRule: (e: Expr, i:int)=>boolean, displayMod: DisplayMod, groupRule: [int,int][]=[]): JSX.Element{
     return displayMod.wrap(
         group<JSX.Element>(
@@ -53,6 +56,7 @@ function group<T>(l: T[], group: [int,int][], h: (_:T[], last:boolean)=>T){
 
     return h(stack[0], true)
 }
+*/
 
 
 export function isConst(e: Expr, varr:string): boolean{

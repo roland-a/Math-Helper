@@ -1,4 +1,5 @@
 import { formula } from "../../equivalences/Formula";
+import { PreJSX } from "../../ui/PreJsx";
 import { Add } from "../basic/Add";
 import { Div } from "../basic/Div";
 import { Pow } from "../basic/Pow";
@@ -36,9 +37,11 @@ export const E = new class extends ExprBase{
         ]
     }
 
-    display(d: DisplayMod): JSX.Element {
-        return d.wrap(
-            <span>e</span>
+    toPreJSX(): PreJSX {
+        return new PreJSX(
+            this,
+            "E",
+            "e"
         )
     }
 }

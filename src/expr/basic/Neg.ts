@@ -5,11 +5,10 @@ import { pool } from "../../misc/Pooler"
 import { Derive } from "../calculus/Derive"
 import { Integrate } from "../calculus/Integrate"
 import { Expr } from "../Expr"
-import { Input } from "../ExprBase"
-import { Unary } from "../Unary"
+import { ExprBase, Input } from "../ExprBase"
 import { Mult } from "./Mult"
 
-export class Neg extends Unary{
+export class Neg extends ExprBase{
     static equivs = ()=> [
         formula(
             new Neg("x"),
@@ -32,16 +31,14 @@ export class Neg extends Unary{
     readonly cssName = "Neg"
 
     constructor(inner: Expr){
-        super(inner)
+        super([inner])
 
         if (this.children.some(c=>c.type=="boolean")) throw new Error()
 
         return pool(this)
     }
 
-    innerAmbigious(inner: Expr): boolean {
-        return inner instanceof Number
+    childAmbigious(e: Expr, i: number): boolean | null {
+        return e instanceof Number
     }
-
-
 }
