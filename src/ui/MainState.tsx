@@ -39,12 +39,11 @@ export class MainState {
             .getFromPath(this.zoomPath)
             .toPreJSX()
             .display(
-                r=>this.manipExpr(r, this.zoomPath)
+                r=>this.manipMainExpr(r, this.zoomPath)
             )
     }
 
-    
-    private manipExpr(d: PreJSX, p: Path) {
+    private manipMainExpr(d: PreJSX, p: Path) {
         if (d.e instanceof TypeBox){
             this.manipTypebox(d)
             return
@@ -97,18 +96,18 @@ export class MainState {
 
             if (c.nthChild == null) return
 
-            this.manipExpr(c, p.add(c.nthChild))
+            this.manipMainExpr(c, p.add(c.nthChild))
         })
 
         if (this.selectedExpr == p) {
             d.wrap("Selected")
-            return;
         }
-        if (p != Path.EMPTY && p.pop() == this.selectedExpr && this.subSelectedExpr.has(p.last())) {
+        else if (p != Path.EMPTY && p.pop() == this.selectedExpr && this.subSelectedExpr.has(p.last())) {
             d.wrap("SubSelected")
-            return;
         }
-        d.wrap("NotSelected")
+        else {
+            d.wrap("NotSelected")
+        }
     }
 
     displayFormulas(): JSX.Element {
@@ -156,8 +155,6 @@ export class MainState {
 
         d.addLeftClick(
             ()=>{
-                console.log("y")
-
                 if (Date.now() - this.lastUpdated < 10) return
                 this.lastUpdated = Date.now()
     
@@ -172,6 +169,12 @@ export class MainState {
             if (this.typeBoxPos == 0){
                 d.wrap("CursorLeft")
             }
+            else {
+                d.wrap("CursorNone")
+            }
+        }
+        else {
+            d.wrap("NotSelected")
         }
 
         d.forEach((c,i)=>this.typeBoxContentManip(t, c, i))
@@ -203,7 +206,6 @@ export class MainState {
         }
     }
 
-
     private updateFormulas(): void {
         if (this.selectedExpr == null) return
 
@@ -211,7 +213,7 @@ export class MainState {
         this.selectedFormula = null;
     }
 
-    keyDown(key: string|Expr): void {
+    keyDown(key: char|Expr): void {
         if (!(typeof key == "string")){
             this.insert(key)
             return
@@ -237,18 +239,10 @@ export class MainState {
         }
     }
 
-    private insert(c: char | Expr) {
+    private insert(c: char|Expr) {
         if (this.typeBox == null) return
 
-        let flag = this.typeBox.insert(this.typeBoxPos, c)
-
-        if (flag instanceof TypeBox){
-            this.typeBox = flag
-            this.typeBoxPos = 0
-        }
-        else if (typeof flag == "number") {
-            this.typeBoxPos = flag
-        }
+        [this.typeBox, this.typeBoxPos] = this.typeBox.insert(this.typeBoxPos, c)
 
         this.lastUpdated = Date.now();
     }
@@ -256,10 +250,8 @@ export class MainState {
     private delete() {
         if (this.typeBox == null) return
 
-        if (this.typeBoxPos == 0) return
-
-        this.typeBox.contents.splice(this.typeBoxPos - 1, 1);
-        this.typeBoxPos -= 1;
+        let removed = this.typeBox.remove(this.typeBoxPos)
+        if (removed) this.typeBoxPos -= 1;
 
         this.lastUpdated = Date.now();
     }
@@ -275,36 +267,47 @@ export class MainState {
     }
 
     private next(side: Side) {
-        this.lastUpdated = Date.now()
+        if (this.typeBox == null) return
 
-        let list = this.makeNextItemsList(side)
+        let nextItems = this.makeNextItemsList(side)
 
-        if (list.length == 0) return
+        if (nextItems.length == 0) return
 
-        while (!(list[0].parent instanceof TypeBox)){
-            rotate(list)
+        while (!(nextItems[0].parent instanceof TypeBox)){
+            rotate(nextItems)
         }
 
-        this.typeBox = list[0].parent
-        this.typeBoxPos = list[0].i
+        this.typeBox = nextItems[0].parent
+        this.typeBoxPos = nextItems[0].i
+
+        this.lastUpdated = Date.now()
     }
 
     private makeNextItemsList(side: Side): {child:Expr, i:int, parent:Expr}[]{
         let result: {child:Expr, i:int, parent:Expr}[] = []
+
+        let getChildFn = (e:Expr)=>{
+            if (e instanceof TypeBox){
+                return [...e.contents, ""]
+            }
+            return e.children.toArray()
+        }
+
+        let possibleRoots = [this.main, ...this.formulas]
+
+        if (this.typeBox == null) return []
+
+        let root = possibleRoots.find(c=>contains(c, this.typeBox!, getChildFn))
+
+        if (root === undefined) return []
         
-        iterTree(
-            this.main,
-            e=>{
-                if (e instanceof TypeBox){
-                    return [...e.contents, ""]
-                }
-                return e.children.toArray()
-            },
-            (c,i,p)=>result.push({child:c, i:i, parent:p})
-        )
+        forEachChild(root, getChildFn, (c,i,p)=>result.push({child:c, i:i, parent:p}))
+
         if (side == Side.LEFT){
             result.reverse()
         }
+
+        let i = 0
         
         //rotates the list until parent is the current typebox and position
         while (true){
@@ -320,6 +323,7 @@ export class MainState {
         return result
     }
 
+  
     private enter() {
         if (this.main instanceof TypeBox) {
             this.main = this.main.parse();
@@ -360,13 +364,19 @@ export class MainState {
     }
 }
 
-function iterTree<T>(root: T, children: (root:T)=>T[], forEachChild: (child: T, index:int, parent:T)=>void){
-    let i = 0
 
-    children(root).forEach((c,i)=>{
-        forEachChild(c, i, root)
+function contains<T>(root: T, t: T, childrenFn: (root:T)=>T[]): boolean{
+    if (root == t) return true
 
-        iterTree(c, children, forEachChild)
+    return childrenFn(root).find(c=>contains(c,t,childrenFn)) !== undefined
+}
+
+
+function forEachChild<T>(root: T, childrenFn: (root:T)=>T[], forEachChildFn: (child: T, index:int, parent:T)=>void){
+    childrenFn(root).forEach((c,i)=>{
+        forEachChildFn(c, i, root)
+
+        forEachChild(c, childrenFn, forEachChildFn)
     })
 }
 

@@ -29,47 +29,54 @@ export class TypeBox extends ExprBase{
          super([])
     }
 
-    childAmbigious(e: Expr, i: number): boolean | null {
-        return false
-    }
+    insert(cursorPos:int, e:Expr): [TypeBox,int]{
+        if (typeof e == "number") throw "numbers not allowed"
+        if (typeof e == "string" && e.length != 1) throw "inserted strings must only be single characters"
 
-    insert(cursorPos:int, c:char|Expr): TypeBox|int|null{
-        if (typeof c == "string"){
-            this.contents.splice(cursorPos, 0, c)
-            return cursorPos+1
+        if (e instanceof TypeBox){
+            this.contents.splice(cursorPos, 0, e)
+
+            return [e,0]
         }
-        if (c instanceof TypeBox){
-            this.contents.splice(cursorPos, 0, c)
-            return c
-        }
+        //tries to move content behind inside typebox
+        if (e.children.find(c=>c instanceof TypeBox) !== undefined){
+            let moveStart = cursorPos
+            while (true){
+                if (moveStart == 0) break
 
-        let moveStart = cursorPos
-        while (true){
-            if (this.contents[moveStart] instanceof TypeBox) break
+                let behind = this.contents[moveStart-1]
 
-            if (moveStart == 0) break
-
-            let behind = this.contents[moveStart-1]
-            if (typeof behind == "string" && /[+\-*=∧∨]/.test(behind)){
-                break
+                if (typeof behind != "string") break
+                if (/[+\-*=∧∨]/.test(behind)) break
+    
+                moveStart -= 1
             }
+    
+            let movedContent = this.contents.splice(moveStart, cursorPos-moveStart, e)
+    
+            //typebox that will contain the moved contnent
+            let boxWithMovedContent = e.children.find(c=>c instanceof TypeBox) as TypeBox
 
-            moveStart -= 1
+            //typebox that the cursor will be on
+            let boxWithCursor = e.children.find(c=>c instanceof TypeBox && c != boxWithMovedContent) as TypeBox ?? boxWithMovedContent
+            
+            boxWithMovedContent.contents = movedContent
+    
+            return [boxWithCursor, 0]
         }
+        this.contents.splice(cursorPos, 0, e)
 
-        let movedContent = this.contents.splice(moveStart, cursorPos-moveStart, c)
-
-        let newTypeBox = c.children.find(c=>c instanceof TypeBox) as TypeBox
-        
-        newTypeBox.contents = movedContent
-
-        if (movedContent.length != 0) return moveStart+1
-
-        return newTypeBox
+        return [this, cursorPos+1]
     }
 
-    ambigious(parent: Class<Expr>, index: number): boolean {
-        return false
+    remove(cursorPos:int): boolean{
+        if (cursorPos == 0) return false
+
+        if (this.contents.length == 0) return false
+
+        this.contents.splice(cursorPos-1, 1)
+
+        return true
     }
 
     toPreJSX(): PreJSX {
@@ -79,7 +86,7 @@ export class TypeBox extends ExprBase{
             this.contents.map(
                 c=>{
                     if (typeof c != "string"){
-                        return c.toPreJSX().wrap("Wrapped", c instanceof TypeBox)
+                        return c.toPreJSX()
                     }
                     return new PreJSX(null, "", c)
                 }
@@ -187,7 +194,7 @@ function parseLeft(content: (char|Expr)[], op: Class<Expr>, delimiter:string){
     if (content.length <= delimiter.length) return null
 
     for (let i = 0; i < content.length; i++){
-        if (content[0] != [...delimiter][0]) return null
+        if (content[i] != [...delimiter][i]) return null
     }
 
     return new op(parse(content.slice(delimiter.length)))
