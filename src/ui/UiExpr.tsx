@@ -63,7 +63,7 @@ export class UIExpr{
         else {
             result = <>{
                 this.children.map((c,i)=>{
-                    if (this.op?.childAmbigious(c.op!,i) ?? c.op?.generallyUnambigious!){
+                    if (this.op?.childAmbigious(c.op!,i) ?? !c.op?.generallyUnambigious){
                         c.hasParenthesis = true
                     }
                     return c.display()
