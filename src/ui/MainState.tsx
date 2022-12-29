@@ -341,8 +341,6 @@ export class MainState {
             this.lastUpdated = Date.now();
         }
         else if (this.selectedEquivs != null && this.selectedExprPath != null) {
-            alert()
-
             this.main = this.main.setFromPath(
                 this.selectedExprPath, 
                 parseExpr(this.equivs[this.selectedEquivs])
