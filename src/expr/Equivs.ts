@@ -73,7 +73,7 @@ function superFlat(e: any): any[]{
     return result
 } 
 
-export function get(selected: Expr, subSelected: Set<int>): Expr[]{
+export function getEquivs(selected: Expr, subSelected: Set<int>): Expr[]{
     let result = [] as Expr[]
 
     list.forEach(c=>{

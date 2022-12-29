@@ -8,7 +8,7 @@ import { Path } from "../misc/Path";
 import { Div } from "../expr/basic/Div";
 import { Abs } from "../expr/basic/Abs";
 import { Pow } from "../expr/basic/Pow";
-import { get } from "../expr/Equivs";
+import { getEquivs as getEquivs } from "../expr/Equivs";
 import { Limit } from "../expr/calculus/Limit";
 import { Derive } from "../expr/calculus/Derive";
 import { Assign } from "../expr/calculus/Assign";
@@ -25,12 +25,12 @@ export class MainState {
 
     private zoomPath: Path = Path.EMPTY
 
-    private selectedExpr: Path | null = null
-    private subSelectedExpr: Set<int> = Set()
+    private selectedExprPath: Path | null = null
+    private subSelectedExprList: Set<int> = Set()
 
-    private formulas: Expr[] = []
+    private equivs: Expr[] = []
 
-    private selectedFormula: int | null = null
+    private selectedEquivs: int | null = null
 
     lastUpdated = 0;
 
@@ -53,14 +53,14 @@ export class MainState {
                 if (Date.now() - this.lastUpdated < 10) return
                 this.lastUpdated = Date.now()
     
-                if (this.selectedExpr == p) return
+                if (this.selectedExprPath == p) return
     
-                this.selectedExpr = p;
-                this.subSelectedExpr = Set();
+                this.selectedExprPath = p;
+                this.subSelectedExprList = Set();
     
-                this.updateFormulas();
+                this.updateEquivs();
     
-                let m = this.main.getFromPath(this.selectedExpr)
+                let m = this.main.getFromPath(this.selectedExprPath)
             }
         )
 
@@ -72,17 +72,17 @@ export class MainState {
                 if (p == Path.EMPTY)
                     return false;
     
-                if (this.selectedExpr != p.pop())
+                if (this.selectedExprPath != p.pop())
                     return false;
     
-                if (this.subSelectedExpr.has(p.last())) {
-                    this.subSelectedExpr = this.subSelectedExpr.remove(p.last());
+                if (this.subSelectedExprList.has(p.last())) {
+                    this.subSelectedExprList = this.subSelectedExprList.remove(p.last());
                 }
                 else {
-                    this.subSelectedExpr = this.subSelectedExpr.add(p.last());
+                    this.subSelectedExprList = this.subSelectedExprList.add(p.last());
                 }
     
-                this.updateFormulas();
+                this.updateEquivs();
     
                 this.lastUpdated = Date.now();
             }
@@ -94,10 +94,10 @@ export class MainState {
             this.manipMainExpr(c, p.add(i))
         })
 
-        if (this.selectedExpr == p) {
+        if (this.selectedExprPath == p) {
             d.selected = ("Selected")
         }
-        else if (p != Path.EMPTY && p.pop() == this.selectedExpr && this.subSelectedExpr.has(p.last())) {
+        else if (p != Path.EMPTY && p.pop() == this.selectedExprPath && this.subSelectedExprList.has(p.last())) {
             d.selected = ("SubSelected")
         }
         else {
@@ -105,11 +105,11 @@ export class MainState {
         }
     }
 
-    displayFormulas(): JSX.Element {
-        let l = this.formulas.map((c, i) => {
+    displayEquivs(): JSX.Element {
+        let l = this.equivs.map((c, i) => {
             let result: UIExpr = c.toUiExpr()
 
-            if (i == this.selectedFormula) {
+            if (i == this.selectedEquivs) {
                 result.selected = ("Selected")
             }
             else {
@@ -118,23 +118,21 @@ export class MainState {
 
             result.addLeftClick(
                 () => {                
-                    this.selectedFormula = i;
+                    this.selectedEquivs = i;
                 }    
             )
 
-            this.manipExprInFormula(result)
+            this.manipEquiv(result)
 
             return result.display()
         });
 
         return (
-            <span className="Formulas">
-                {l}
-            </span>
+            <span className="Equivs">{l}</span>
         );
     }
 
-    private manipExprInFormula(d: UIExpr) {
+    private manipEquiv(d: UIExpr) {
         if (d.op instanceof TypeBox){
             this.manipTypebox(d)
             return
@@ -143,7 +141,7 @@ export class MainState {
         d.children.forEach(c=>{
             if (typeof c == "string") return
 
-            this.manipExprInFormula(c)
+            this.manipEquiv(c)
         })
     }
 
@@ -193,7 +191,7 @@ export class MainState {
             this.manipTypebox(d)
         }
         else {
-            this.manipExprInFormula(d)
+            this.manipEquiv(d)
         }
 
         if (parent == this.typeBox && i == this.typeBoxPos-1){
@@ -204,11 +202,23 @@ export class MainState {
         }
     }
 
-    private updateFormulas(): void {
-        if (this.selectedExpr == null) return
+    private updateEquivs(): void {
+        if (this.selectedExprPath == null) return
 
-        this.formulas = get(this.main.getFromPath(this.selectedExpr), this.subSelectedExpr);
-        this.selectedFormula = null;
+        let selectedExpr = this.main.getFromPath(this.selectedExprPath)
+
+        this.equivs = getEquivs(selectedExpr, this.subSelectedExprList)
+            .filter(c=>{
+                try{
+                    this.main.setFromPath(this.selectedExprPath!, c);
+                }
+                catch(e){
+                    return false
+                }
+                return true
+            })
+
+        this.selectedEquivs = null;
     }
 
     keyDown(key: char|Expr): void {
@@ -255,8 +265,8 @@ export class MainState {
     }
 
     zoom(){
-        if (this.zoomPath != this.selectedExpr && this.selectedExpr != null){
-            this.zoomPath = this.selectedExpr
+        if (this.zoomPath != this.selectedExprPath && this.selectedExprPath != null){
+            this.zoomPath = this.selectedExprPath
         }
         else {
             this.zoomPath = Path.EMPTY
@@ -295,7 +305,7 @@ export class MainState {
             return e.children.toArray()
         }
 
-        let possibleRoots = [this.main, ...this.formulas]
+        let possibleRoots = [this.main, ...this.equivs]
 
         if (this.typeBox == null) return []
 
@@ -326,20 +336,20 @@ export class MainState {
     private enter() {
         if (this.main.op instanceof TypeBox) {
             this.main = parseExpr(this.main);
-            this.updateFormulas();
+            this.updateEquivs();
 
             this.lastUpdated = Date.now();
         }
-        else if (this.selectedFormula != null && this.selectedExpr != null) {
+        else if (this.selectedEquivs != null && this.selectedExprPath != null) {
             alert()
 
             this.main = this.main.setFromPath(
-                this.selectedExpr, 
-                parseExpr(this.formulas[this.selectedFormula])
+                this.selectedExprPath, 
+                parseExpr(this.equivs[this.selectedEquivs])
             );
 
-            this.selectedExpr = null;
-            this.formulas = []
+            this.selectedExprPath = null;
+            this.equivs = []
 
             this.lastUpdated = Date.now();
         }
@@ -353,11 +363,11 @@ export class MainState {
         result.typeBox = this.typeBox?.clone(cloneMap) ?? null;
         result.typeBoxPos = this.typeBoxPos;
 
-        result.selectedExpr = this.selectedExpr;
-        result.subSelectedExpr = this.subSelectedExpr;
+        result.selectedExprPath = this.selectedExprPath;
+        result.subSelectedExprList = this.subSelectedExprList;
 
-        result.formulas = this.formulas.map(c => c.clone(cloneMap));
-        result.selectedFormula = this.selectedFormula;
+        result.equivs = this.equivs.map(c => c.clone(cloneMap));
+        result.selectedEquivs = this.selectedEquivs;
 
         result.lastUpdated = this.lastUpdated;
 

@@ -222,20 +222,20 @@ button {
 	font-size: larger
 }
 
-.Formulas {
+.Equivs {
 	background-color: #fff;
 	flex-direction: column;
 	font-size: x-large;
 	gap: 10px
 }
 
-.Formulas>:first-child {
+.Equivs>:first-child {
 	align-items: flex-start;
 	flex-direction: row;
 	gap: 30px
 }
 
-.Formulas>:first-child>:nth-child(n) {
+.Equivs>:first-child>:nth-child(n) {
 	flex-direction: column;
 	gap: 5px
 }

@@ -32,7 +32,7 @@ export let Screen = new class{
                     {this.zoomButton()}
                 </span>
             </span>
-            {this.current.displayFormulas()}
+            {this.current.displayEquivs()}
         </span>
     }
 
