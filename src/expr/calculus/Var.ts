@@ -21,6 +21,6 @@ export class Var extends Op{
     }
 
     modifyUi(self: UIExpr): void {
-        self.overridenContent = JSON.stringify(this.inner)
+        self.overridenContent = this.inner
     }
 }
