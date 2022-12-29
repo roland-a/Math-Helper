@@ -2,13 +2,11 @@ import { List } from "immutable"
 import { CloneMap } from "../misc/Clone"
 import { int } from "../misc/Int"
 import { UIExpr } from "../ui/UiExpr"
-import { PrettyExpr, unprettify } from "./helper"
+import { assertAllCanBe, PrettyExpr, unprettify } from "./helper"
 import { Expr as Expr } from "./Expr"
+import { Type } from "./Type"
 
 export abstract class Op{
-    type: "number" | "boolean" | null = "number"
-
-    //ui
     cssName: string = ""
     generallyUnambigious: boolean = false
     cssGrouping: [int,int][] = []
@@ -25,8 +23,12 @@ export abstract class Op{
         )
     }
 
-    validChildren(children: List<Op>): boolean{
-        return children.findEntry(c=>c.type != "boolean") != undefined
+    type(children: List<Type>): Type{
+        return Type.Num
+    }
+
+    validate(children: List<Type>): void{
+        assertAllCanBe(Type.Num, children, this.cssName)
     }
 
     clone(cloneMap: CloneMap): this{

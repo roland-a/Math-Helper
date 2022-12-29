@@ -5,6 +5,7 @@ import { Path } from "../misc/Path";
 import { pool } from "../misc/Pooler";
 import { UIExpr } from "../ui/UiExpr";
 import { Op } from "./Op";
+import { Type } from "./Type";
 
 
 export class Expr{
@@ -12,15 +13,21 @@ export class Expr{
     children: List<Expr>
     children_
 
+    type: Type
+
     constructor(op: Op, children: List<Expr>){
         this.op = op
         this.children = children
         this.children_ = children.toArray()
 
+        this.type = op.type(children.map(c=>c.type))
+
+        op.validate(children.map(c=>c.type))
+
         return pool(this)
     }
 
-    type: "number" | "boolean" | null = null
+
 
     get(index: int): Expr{
         return this.children.get(index)!

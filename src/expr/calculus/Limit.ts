@@ -11,6 +11,9 @@ import { Expr } from "../Expr";
 import { Op } from "../Op";
 import { formula } from "../../equivalences/Formula";
 import { Assign } from "./Assign";
+import { Type } from "../Type";
+import { List } from "immutable";
+import { assertCanBe } from "../helper";
 
 
 
@@ -35,6 +38,16 @@ export const Limit = new class extends Op{
         if (e == v) return true
 
         return e.children.some(c=>this.hasVar(c, v))
+    }
+
+    type(): Type{
+        return Type.Num
+    }
+
+    validate(children: List<Type>) {
+        assertCanBe(Type.Var, 0, children, this.cssName)
+        assertCanBe(Type.Num, 1, children, this.cssName)
+        assertCanBe(Type.Num, 2, children, this.cssName)
     }
 
     childAmbigious(e: Op, i: number): boolean|null {

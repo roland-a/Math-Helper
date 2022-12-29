@@ -3,6 +3,8 @@ import { UIExpr } from "../../ui/UiExpr";
 import { Op } from "../Op";
 
 export class Num extends Op{
+    readonly cssName = "Num"
+
     readonly inner: number
 
     readonly generallyUnambigious = true

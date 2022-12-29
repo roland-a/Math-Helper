@@ -1,7 +1,8 @@
+import { List } from "immutable"
 import { formula } from "../../equivalences/Formula"
-import { pool } from "../../misc/Pooler"
-import { Expr } from "../Expr"
+import { assertAllCanBe } from "../helper"
 import { Op } from "../Op"
+import { Type } from "../Type"
 
 export const Not = new class extends Op{
     equivs = ()=> [
@@ -19,6 +20,13 @@ export const Not = new class extends Op{
         )
     ]
 
-    readonly type: "boolean" = "boolean"
     readonly cssName = "Not"
+
+    type(): Type{
+        return Type.Bool
+    }
+
+    validate(children: List<Type>) {
+        assertAllCanBe(Type.Bool, children, this.cssName)
+    }
 }

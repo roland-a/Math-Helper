@@ -1,4 +1,4 @@
-import { Set } from "immutable";
+import { List, Set } from "immutable";
 import { EquivGen } from "../../equivalences/EquivGen";
 import { Distribute } from "../../equivalences/Distribute";
 import { int } from "../../misc/Int";
@@ -14,8 +14,9 @@ import { Div } from "../basic/Div";
 import { Sub } from "../basic/Sub";
 import { Limit } from "./Limit";
 import { Assign } from "./Assign";
-import { isConst } from "../helper";
+import { assertCanBe, isConst } from "../helper";
 import { Num } from "../basic/Num";
+import { Type } from "../Type";
 
 let consts = new class extends EquivGen{
     generate(selected: Expr, subSelected: Set<number>): Expr|null {
@@ -46,8 +47,16 @@ export const Derive = new class extends Op{
     ]
 
     readonly generallyUnambigious = true
-
     readonly cssName = "Derive"
+
+    type(): Type{
+        return Type.Num
+    }
+
+    validate(children: List<Type>) {
+        assertCanBe(Type.Num, 0, children, this.cssName)
+        assertCanBe(Type.Var, 1, children, this.cssName)
+    }
 
     childAmbigious(e: Op, i: number): boolean | null {
         if (e == Assign) return true

@@ -21,9 +21,9 @@ import { E } from "./calculus/E"
 import { Roots } from "./basic/Roots"
 import { And } from "./boolean/And"
 import { Or } from "./boolean/Or"
-import { Any } from "./boolean/Any"
+import { Any } from "./calculus/Any"
 import { Not } from "./boolean/Not"
-import { All } from "./boolean/All"
+import { All } from "./calculus/All"
 
 const free = new class extends EquivGen{
     generate(selected: Expr, subSelected: Set<number>): Expr|null {

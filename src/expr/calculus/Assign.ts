@@ -8,6 +8,8 @@ import { Derive } from "./Derive";
 import { Integrate } from "./Integrate";
 import { Limit } from "./Limit";
 import { Var } from "./Var";
+import { assertCanBe, assertoverlap } from "../helper";
+import { Type } from "../Type";
 
 
 const assignVar = new class extends EquivGen{
@@ -44,7 +46,7 @@ const reverseAssignVar = new class extends EquivGen{
 
         return Assign.toExpr(
             selected.set(subSelected.toArray()[0], t.toExpr()),
-            t,
+            t.toExpr(),
             selected.get(subSelected.toArray()[0])
         )
     }
@@ -67,5 +69,15 @@ export const Assign = new class extends Op{
         if (i==2) return true
 
         return null
+    }
+
+    type(children: List<Type>): Type{
+        return children.get(0)!
+    }
+
+    validate(children: List<Type>) {
+        assertCanBe(Type.Var, 1, children, this.cssName)
+
+        assertoverlap(0, 2, children, this.cssName)
     }
 }

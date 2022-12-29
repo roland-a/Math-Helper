@@ -21,7 +21,7 @@ import { Expr } from "./Expr"
 import { Num } from "./basic/Num"
 import { Var } from "./calculus/Var"
 import { PrettyExpr, unprettify } from "./helper"
-import { stringify } from "flatted"
+import { Type } from "./Type"
 
 
 export class TypeBox extends Op{
@@ -29,8 +29,11 @@ export class TypeBox extends Op{
 
     contents: (char|Expr)[] = []
 
-    readonly type = null
     readonly generallyUnambigious = true
+    
+    type(): Type{
+        return Type.Var
+    }
 
     insert(cursorPos:int, e:Expr|char): [TypeBox,int]{
         if (typeof e == "number") throw "numbers not allowed"

@@ -1,4 +1,4 @@
-import { Set } from "immutable";
+import { List, Set } from "immutable";
 import { EquivGen } from "../../equivalences/EquivGen";
 import { Class } from "../../misc/Class";
 import { int } from "../../misc/Int";
@@ -10,7 +10,8 @@ import { TypeBox } from "../TypeBox";
 import { Expr } from "../Expr";
 import { Op } from "../Op";
 import { Bool } from "./Bool";
-import { precident } from "../helper";
+import { assertoverlap, precident } from "../helper";
+import { Type } from "../Type";
 
 
 class BothSides extends EquivGen{
@@ -48,7 +49,7 @@ const eqImm = new class extends EquivGen{
         if (typeof selected == "boolean" && selected == true){
             let t = new TypeBox()
 
-            return Eq.toExpr(t, t)
+            return Eq.toExpr(t.toExpr(), t.toExpr())
         }
 
         if (!(selected.is(Eq))) return null
@@ -67,8 +68,15 @@ export const Eq = new class extends Op{
         new BothSides(Div)
     ]
 
-    readonly type: "boolean" = "boolean"
     readonly cssName = "Eq"
+
+    type(): Type{
+        return Type.Bool
+    }
+
+    validate(children: List<Type>) {
+        assertoverlap(0, 1, children, this.cssName)
+    }
     
     childAmbigious(e: Op, i: number): boolean | null {
         return precident(this, e)

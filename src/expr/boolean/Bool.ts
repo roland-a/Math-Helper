@@ -1,8 +1,11 @@
 import { pool } from "../../misc/Pooler";
 import { UIExpr } from "../../ui/UiExpr";
 import { Op } from "../Op";
+import { Type } from "../Type";
 
 export class Bool extends Op{
+    readonly cssName = "Bool"
+
     readonly inner: boolean
 
     readonly generallyUnambigious = true
@@ -11,6 +14,10 @@ export class Bool extends Op{
         this.inner = inner
 
         return pool(this)
+    }
+
+    type(): Type {
+        return Type.Bool
     }
 
     applyUnary(fn: (num: boolean)=>boolean): Bool{
