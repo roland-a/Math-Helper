@@ -21,8 +21,6 @@ export const Roots = new class extends Op{
     readonly cssName = "Roots"
 
     modifyUi(self: UIExpr): void {
-        console.log(self.children.get(0)!.op)
-
         if (self.children.get(0)!.op == new Num(2)){
             self.children.get(0)!.overridenContent = ""
         }
