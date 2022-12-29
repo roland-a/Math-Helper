@@ -1,20 +1,21 @@
 import { List, Set } from "immutable";
+import { Op } from "../expr/Op";
 import { Expr} from "../expr/Expr";
 import { Class } from "../misc/Class";
 import { int } from "../misc/Int";
 import { EquivGen } from "./EquivGen";
 
 export class Distribute extends EquivGen{
-    op: Class<Expr>
-    collective1: Class<Expr>
-    collective2: Class<Expr>
+    op: Op
+    collective1: Op
+    collective2: Op
     index: int
 
     constructor(
-        op: Class<Expr>, 
+        op: Op, 
         index: int,
-        collective1: Class<Expr>, 
-        collective2: Class<Expr>=collective1, 
+        collective1: Op, 
+        collective2: Op=collective1, 
     ) { super()
         this.op = op
         this.collective1 = collective1
@@ -29,15 +30,15 @@ export class Distribute extends EquivGen{
     }
 
     generate1(selected: Expr): Expr|null {
-        if (!(selected instanceof this.op)) return null
+        if (!(selected.is(this.op))) return null
 
         let collective = selected.get(this.index)
 
-        if (!(collective instanceof this.collective1)) return null
+        if (!(collective.is(this.collective1))) return null
 
-        return new this.collective2(
+        return this.collective2.toExpr(
             ...collective.children.map(
-                c=> new this.op(
+                c=> this.op.toExpr(
                     ...selected.children.set(this.index, c)
                 )
             )
@@ -45,7 +46,7 @@ export class Distribute extends EquivGen{
     }
 
     generate2(selected: Expr): Expr|null {
-        if (!(selected instanceof this.collective2)) return null
+        if (!(selected.is(this.collective2))) return null
 
         let collective = selected.children
 
@@ -53,14 +54,14 @@ export class Distribute extends EquivGen{
         
         let dist = collective.get(0)!.children
 
-        let flag = collective.some(c=> !this.match(c.children, dist) || !(c instanceof this.op))
+        let flag = collective.some(c=> !this.match(c.children, dist) || !(c.is(this.op)))
 
         if (flag) return null
 
-        return new this.op(
+        return this.op.toExpr(
             ...dist.set(
                 this.index, 
-                new this.collective1(
+                this.collective1.toExpr(
                     ...collective.map(c=>c.get(this.index))
                 )
             )

@@ -1,19 +1,20 @@
 import { Set } from "immutable";
+import { Op } from "../expr/Op";
 import { Expr } from "../expr/Expr";
-import { Class } from "../misc/Class";
 import { EquivGen } from "./EquivGen";
+import { PrettyExpr, unprettify } from "../expr/helper";
 
 export class Anhiliator extends EquivGen{
-    readonly op: Class<Expr>
+    readonly op: Op
     readonly annhiliator: Expr
 
-    constructor(op: Class<Expr>, annhiliator: Expr){ super()
+    constructor(op: Op, annhiliator: PrettyExpr){ super()
         this.op = op
-        this.annhiliator = annhiliator
+        this.annhiliator = unprettify(annhiliator)
     }
 
     generate(selected: Expr, subSelected: Set<number>): Expr | null {
-        if (!(selected instanceof this.op)) return null
+        if (!(selected.is(this.op))) return null
 
         if (!selected.children.some(c=>c == this.annhiliator)) return null
 

@@ -1,15 +1,9 @@
 import { pool } from "../../misc/Pooler";
 import { Expr } from "../Expr";
-import { ExprBase } from "../ExprBase";
+import { Op } from "../Op";
 
 import { TrigBase } from "./TrigBase";
 
-export class Tan extends TrigBase{
+export const Tan = new class extends TrigBase{
     readonly cssName = "Tan"
-
-    constructor(inner: Expr){ 
-        super(inner)
-
-        return pool(this)
-    }
 }

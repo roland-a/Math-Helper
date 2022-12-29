@@ -1,47 +1,31 @@
 import { formula } from "../../equivalences/Formula";
-import { PreJSX } from "../../ui/PreJsx";
+import { UIExpr } from "../../ui/UiExpr";
 import { Add } from "../basic/Add";
 import { Div } from "../basic/Div";
 import { Pow } from "../basic/Pow";
-import { DisplayMod, Expr } from "../Expr";
-import { ExprBase } from "../ExprBase";
+import { Expr } from "../Expr";
+import { Op } from "../Op";
 import { Derive } from "./Derive";
 import { Infinity } from "./Infinity";
 import { Limit } from "./Limit";
 
-
-
-export const E = new class extends ExprBase{
+export const E = new class extends Op{
     readonly generallyUnambigious = true
 
-    constructor(){
-        super([])
-    }
-
     equivs = ()=> {
-        let Derive = require("../calculus/Derive").Derive
-        let Add = require("../basic/Add").Add
-        let Pow = require("../basic/Pow").Pow
-        let Div = require("../basic/Div").Div
-        let Limit = require("../calculus/Limit").Limit 
-        
         return [
             formula(
                 E,
-                new Limit("n", Infinity, new Pow(new Add(1, new Div(1, "n")), "n"))
+                Limit.toExpr("n", Infinity, Pow.toExpr(Add.toExpr(1, Div.toExpr(1, "n")), "n"))
             ), 
             formula(
-                new Derive(new Pow(E, "x"), "x"),
-                new Pow(E, "x")
+                Derive.toExpr(Pow.toExpr(E, "x"), "x"),
+                Pow.toExpr(E, "x")
             )
         ]
     }
 
-    toPreJSX(): PreJSX {
-        return new PreJSX(
-            this,
-            "E",
-            "e"
-        )
+    modifyUi(self: UIExpr): void {
+        self.overridenContent = "e"
     }
 }

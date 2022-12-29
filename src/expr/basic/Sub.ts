@@ -5,33 +5,33 @@ import { int } from "../../misc/Int"
 import { pool } from "../../misc/Pooler"
 import { Derive } from "../calculus/Derive"
 import { Integrate } from "../calculus/Integrate"
+import { precident } from "../helper"
 import { Expr } from "../Expr"
-import { ExprBase, Input } from "../ExprBase"
-import { precident } from "../precidents"
+import { Op } from "../Op"
 import { Add } from "./Add"
 import { Neg } from "./Neg"
 
-export class Sub extends ExprBase{
-    static equivs = ()=> [
+export const Sub = new class extends Op{
+    equivs = ()=> [
         formula(
-            new Sub("x", "y"),
-            new Add("x", new Neg("y"))
+            Sub.toExpr("x", "y"),
+            Add.toExpr("x", Neg.toExpr("y"))
         ),
         formula(
-            new Sub("x", 0),
+            Sub.toExpr("x", 0),
             "x"
         ),
         formula(
-            new Sub("x", "x"),
+            Sub.toExpr("x", "x"),
             0
         ),
         formula(
-            new Derive(new Sub("f", "g"), "x"),
-            new Sub(new Derive("f", "x"), new Derive("g", "x"))
+            Derive.toExpr(Sub.toExpr("f", "g"), "x"),
+            Sub.toExpr(Derive.toExpr("f", "x"), Derive.toExpr("g", "x"))
         ),
         formula(
-            new Integrate("a", "b", new Sub("f", "g"), "x"),
-            new Sub(new Integrate("a", "b", "f", "x"), new Integrate("a", "b", "g", "x"))
+            Integrate.toExpr("a", "b", Sub.toExpr("f", "g"), "x"),
+            Sub.toExpr(Integrate.toExpr("a", "b", "f", "x"), Integrate.toExpr("a", "b", "g", "x"))
         ),
         new Simplifier(
             Sub,
@@ -41,15 +41,7 @@ export class Sub extends ExprBase{
 
     readonly cssName = "Sub"
 
-    constructor(left: Expr, right:Expr){ 
-        super([left, right])
-
-        if (this.children.some(c=>c.type=="boolean")) throw new Error()
-
-        return pool(this)
-    }
-    
-    childAmbigious(e: Expr, i: number): boolean | null {
+    childAmbigious(e: Op, i: number): boolean | null {
         return precident(this, e)
     }
 }

@@ -7,38 +7,39 @@ import { Add } from "../basic/Add";
 import { Div } from "../basic/Div";
 import { Mult } from "../basic/Mult";
 import { TypeBox } from "../TypeBox";
-import { DisplayMod, Expr } from "../Expr";
-import { ExprBase, Input } from "../ExprBase";
-import { precident } from "../precidents";
+import { Expr } from "../Expr";
+import { Op } from "../Op";
+import { Bool } from "./Bool";
+import { precident } from "../helper";
 
 
 class BothSides extends EquivGen{
-    op: Class<Expr>
+    op: Op
 
     isContinuous: boolean
 
-    constructor(op: Class<Expr>, isContinuous: boolean = false) { super()
+    constructor(op: Op, isContinuous: boolean = false) { super()
         this.op = op
         this.isContinuous = isContinuous
     }
 
     generate(selected: Expr, subSelected: Set<number>): Expr|null {
-        if (!(selected instanceof Eq)) return null
+        if (!(selected.is(Eq))) return null
 
         let t = new TypeBox()
         
-        return new Eq(
-            this.newSide(selected.get(0), t),
-            this.newSide(selected.get(1), t),
+        return Eq.toExpr(
+            this.newSide(selected.get(0), t.toExpr()),
+            this.newSide(selected.get(1), t.toExpr()),
         )
     }
 
 
     private newSide(side: Expr, t: Expr){
-        if (side instanceof this.op && this.isContinuous){
-            return new this.op(...[...side.children, t])
+        if (side.is(this.op) && this.isContinuous){
+            return this.op.toExpr(...[...side.children, t])
         }
-        return new this.op(side, t)
+        return this.op.toExpr(side, t)
     }
 }
 
@@ -47,19 +48,19 @@ const eqImm = new class extends EquivGen{
         if (typeof selected == "boolean" && selected == true){
             let t = new TypeBox()
 
-            return new Eq(t, t)
+            return Eq.toExpr(t, t)
         }
 
-        if (!(selected instanceof Eq)) return null
+        if (!(selected.is(Eq))) return null
 
         if (selected.children.some(c=> !(typeof c == "number" || typeof c == "boolean"))) return null
 
-        return selected.children.get(0) == selected.children.get(1)
+        return new Bool(selected.children.get(0) == selected.children.get(1)).toExpr()
     }
 }
 
-export class Eq extends ExprBase{
-    static equivs = ()=> [
+export const Eq = new class extends Op{
+    equivs = ()=> [
         eqImm,
         new BothSides(Add, true),
         new BothSides(Mult, true),
@@ -68,14 +69,8 @@ export class Eq extends ExprBase{
 
     readonly type: "boolean" = "boolean"
     readonly cssName = "Eq"
-
-    constructor(...expr: Expr[]) { 
-        super(expr) 
-
-        return pool(this)
-    }
     
-    childAmbigious(e: Expr, i: number): boolean | null {
+    childAmbigious(e: Op, i: number): boolean | null {
         return precident(this, e)
     }
 }

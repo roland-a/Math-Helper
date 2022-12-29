@@ -1,8 +1,9 @@
-import { Pow } from "../expr/basic/Pow";
+
 import { TypeBox } from "../expr/TypeBox";
 import { Expr } from "../expr/Expr";
 import { char } from "../misc/Char";
 import { int } from "../misc/Int";
+import { Pow } from "../expr/basic/Pow";
 import { Roots } from "../expr/basic/Roots";
 import { Tan } from "../expr/trigonometry/Tan";
 import { Cos } from "../expr/trigonometry/Cos";
@@ -20,7 +21,8 @@ import { And } from "../expr/boolean/And";
 import { Any } from "../expr/boolean/Any";
 import { All } from "../expr/boolean/All";
 import { Not } from "../expr/boolean/Not";
-import { PreJSX } from "./PreJsx";
+import { UIExpr } from "./UiExpr";
+import { Var } from "../expr/calculus/Var";
 
 export class KeyBoards{
     private readonly fn: (_:Expr|char)=>void
@@ -39,42 +41,42 @@ export class KeyBoards{
                     ()=>"+",
                     ()=>"-",
                     ()=>"*",
-                    ()=>new Div(new TypeBox(), new TypeBox()),
+                    ()=>Div.toExpr(new TypeBox(), new TypeBox()),
                     ()=>"=",
                 ],
                 [
-                    ()=>new Pow(new TypeBox(), 2),  
-                    ()=>new Pow(new TypeBox(), new TypeBox()), 
-                    ()=>new Roots(2, new TypeBox()),
-                    ()=>new Roots(new TypeBox(), new TypeBox())
+                    ()=>Pow.toExpr(new TypeBox(), 2),  
+                    ()=>Pow.toExpr(new TypeBox(), new TypeBox()), 
+                    ()=>Roots.toExpr(2, new TypeBox()),
+                    ()=>Roots.toExpr(new TypeBox(), new TypeBox())
                 ],
             ),
             this.initSection(
                 "trig",
                 [
-                    ()=>new Sin(new TypeBox()),
-                    ()=>new Cos(new TypeBox()),
-                    ()=>new Tan(new TypeBox()),
-                    ()=>Pi,
+                    ()=>Sin.toExpr(new TypeBox()),
+                    ()=>Cos.toExpr(new TypeBox()),
+                    ()=>Tan.toExpr(new TypeBox()),
+                    ()=>Pi.toExpr(),
                 ],
                 [
-                    ()=>new ASin(new TypeBox()),
-                    ()=>new ACos(new TypeBox()),
-                    ()=>new ATan(new TypeBox()),
-                    ()=>"θ",
+                    ()=>ASin.toExpr(new TypeBox()),
+                    ()=>ACos.toExpr(new TypeBox()),
+                    ()=>ATan.toExpr(new TypeBox()),
+                    ()=>new Var("θ").toExpr(),
                 ],
             ),
             this.initSection(
                 "calc",
                 [
-                    ()=>new Assign(new TypeBox(), new TypeBox(), new TypeBox()),
-                    ()=>new Limit(new TypeBox(), new TypeBox(), new TypeBox()),
-                    ()=>new Derive(new TypeBox(), new TypeBox()),
+                    ()=>Assign.toExpr(new TypeBox(), new TypeBox(), new TypeBox()),
+                    ()=>Limit.toExpr(new TypeBox(), new TypeBox(), new TypeBox()),
+                    ()=>Derive.toExpr(new TypeBox(), new TypeBox()),
                     ()=>(()=>{
                         let varr = new TypeBox()
-                        return new Integrate(varr, 0, new TypeBox(), varr)
+                        return Integrate.toExpr(varr, 0, new TypeBox(), varr)
                     })(),
-                    ()=>new Integrate(new TypeBox(), new TypeBox(), new TypeBox(), new TypeBox())
+                    ()=>Integrate.toExpr(new TypeBox(), new TypeBox(), new TypeBox(), new TypeBox())
                 ]
             ),
             this.initSection(
@@ -82,9 +84,9 @@ export class KeyBoards{
                 [
                     ()=>"∧",
                     ()=>"∨",
-                    ()=>new Not(new TypeBox()),
-                    ()=>new Any(new TypeBox(), new TypeBox()),
-                    ()=>new All(new TypeBox(), new TypeBox())
+                    ()=>Not.toExpr(new TypeBox()),
+                    ()=>Any.toExpr(new TypeBox(), new TypeBox()),
+                    ()=>All.toExpr(new TypeBox(), new TypeBox())
                 ]
             )
         ]
@@ -161,17 +163,17 @@ class Button{
 
                 if (typeof r == "string") return <>{r}</>
 
-                return r.toPreJSX().display(manip)
+                return r.display(manip)
             })()}
         </button>
     }
 }
 
-function manip(p: PreJSX){
-    if (p.e instanceof TypeBox){
-        p.override("☐")
+function manip(p: UIExpr){
+    if (p.op instanceof TypeBox){
+        p.overridenContent = "☐"
     }
     else {
-        p.forEach(c=>manip(c))
+        p.children.forEach(c=>manip(c))
     }
 }

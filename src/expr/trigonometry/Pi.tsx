@@ -1,20 +1,11 @@
-import { PreJSX } from "../../ui/PreJsx";
-import { DisplayMod, Expr } from "../Expr";
-import { ExprBase } from "../ExprBase";
+import { UIExpr } from "../../ui/UiExpr";
+import { Op } from "../Op";
 
 
-export const Pi = new class extends ExprBase{
+export const Pi = new class extends Op{
     readonly generallyUnambigious = true
 
-    constructor(){
-        super([])
-    }
-
-    toPreJSX(): PreJSX {
-        return new PreJSX(
-            this,
-            "Pi",
-            "π"
-        )
+    modifyUi(self: UIExpr): void {
+        self.overridenContent = "π"
     }
 }

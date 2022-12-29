@@ -6,13 +6,12 @@ import { Simplifier } from "../../equivalences/Simplifier";
 import { pool } from "../../misc/Pooler";
 import { Derive } from "../calculus/Derive";
 import { Integrate } from "../calculus/Integrate";
+import { precident } from "../helper";
 import { Expr } from "../Expr";
-import { ExprBase, Input } from "../ExprBase";
+import { Op } from "../Op";
 
-import { precident } from "../precidents";
-
-export class Add extends ExprBase{
-    static equivs = ()=> [
+export const Add = new class extends Op{
+    equivs = ()=> [
         new Associate(Add),
         new Communative(Add),
         new Simplifier(Add,(l,r)=>l+r),
@@ -23,15 +22,7 @@ export class Add extends ExprBase{
 
     readonly cssName = "Add"
 
-    constructor(...children: Expr[]){
-        super(children)
-
-        if (this.children.some(c=>c.type=="boolean")) throw new Error()
-
-        return pool(this)
-    }
-
-    childAmbigious(e: Expr, i: number): boolean | null {
+    childAmbigious(e: Op, i: number): boolean | null {
         return precident(this, e)
     }
 }

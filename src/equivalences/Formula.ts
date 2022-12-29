@@ -1,21 +1,20 @@
 import { Map, Set } from "immutable";
-import { Expr } from "../expr/Expr";
+import { Var } from "../expr/calculus/Var";
+import { PrettyExpr, unprettify } from "../expr/helper";
+import { Expr as Expr } from "../expr/Expr";
 import { TypeBox } from "../expr/TypeBox";
 import { int } from "../misc/Int";
-import { EquivGen} from "./EquivGen";
-import { convert, Input } from "../expr/ExprBase";
+import { EquivGen } from "./EquivGen";
 
-
-
-export function formula(left:Expr, right:Expr): EquivGen[]{
+export function formula(left:PrettyExpr, right:PrettyExpr): EquivGen[]{
     return [
         new FormulaSide(
-            left,
-            right,
+            unprettify(left),
+            unprettify(right),
         ),
         new FormulaSide(
-            right,
-            left,
+            unprettify(right),
+            unprettify(left),
         ),
     ]
 }
@@ -38,74 +37,74 @@ class FormulaSide extends EquivGen{
     generate(selected: Expr, subSelected: Set<int>): Expr|null {
         if (subSelected.size != 0) return null
 
-        let m = FormulaSide.match(selected, this.from)
+        let m = tryCreateMatchMap(selected, this.from)
 
         if (m == null) return null
 
-        return FormulaSide.toTypeBoxExpr(this.to, FormulaSide.getVarToExpr(m))
-    }
-    
-    private static match(expr: Expr, side: Expr): Map<string, Expr>|null{
-        if (typeof side == "string"){
-            let m = Map<string, Expr>()
-            
-            return m.set(side, expr)
-        }
-
-        if (!expr.sameOp(side)) return null
-
-        if (expr.children.size != side.children.size) return null
-
-        let result: Map<string, Expr>|null = Map()
-        for (let i = 0; i < expr.children.size; i++){
-            let m = FormulaSide.match(expr.children.get(i)!, side.children.get(i)!)
-
-            if (m == null) return null
-
-            result = FormulaSide.merge(result, m)
-
-            if (result == null) return null
-        }
-
-        return result
-    }
-
-    private static merge<A,B>(m1: Map<A,B>, m2: Map<A,B>): Map<A,B>|null{
-        let conflict = false
-        
-        m1.forEach((e, v)=>{
-            if (m2.get(v) !== undefined && m2.get(v) !== e) conflict = true
-        })
-
-        if (conflict) return null
-
-        return Map<A,B>({...m1.toObject(), ...m2.toObject()} as any as Iterable<[A,B]>)
-    }
-
-    private static getVarToExpr(m: Map<string,Expr>): VarToExpr {
-        let extras: Map<string, TypeBox> = Map({})
-        
-        return (v)=>{
-            if (m.has(v)) return m.get(v)!
-            
-            if (extras.get(v) === undefined){
-                extras = extras.set(v, new TypeBox()) 
-            }
-    
-            return extras.get(v)!
-        }
-    }
-    
-    private static toTypeBoxExpr(expr: Expr, fn: VarToExpr): Expr{
-        if (typeof expr == "string"){
-            return fn(expr)
-        }
-    
-        return expr.map(
-            c=>this.toTypeBoxExpr(c, fn)
-        )
+        return map(this.to, fillPartialMap(m))
     }
 }
 
-type VarToExpr = (_:string)=>Expr
+function tryMergeMap<A,B>(m1: Map<A,B>, m2: Map<A,B>): Map<A,B>|null{
+    let conflict = false
+    
+    m1.forEach((e, v)=>{
+        if (m2.get(v) !== undefined && m2.get(v) !== e) conflict = true
+    })
+
+    if (conflict) return null
+
+    return Map<A,B>({...m1.toObject(), ...m2.toObject()} as any as Iterable<[A,B]>)
+}
+
+function tryCreateMatchMap(expr: Expr, side: Expr): Map<Var, Expr>|null{
+    if (side.op instanceof Var){
+        let m = Map<Var, Expr>()
+        
+        return m.set(side.op, expr)
+    }
+
+    if (!expr.sameOp(side)) return null
+
+    if (expr.children.size != side.children.size) return null
+
+    let result: Map<Var, Expr>|null = Map()
+    for (let i = 0; i < expr.children.size; i++){
+        let m = tryCreateMatchMap(expr.children.get(i)!, side.children.get(i)!)
+
+        if (m == null) return null
+
+        result = tryMergeMap(result, m)
+
+        if (result == null) return null
+    }
+
+    return result
+}
+
+function fillPartialMap(m: Map<Var,Expr>): FullVarMap {
+    let extras: Map<Var, TypeBox> = Map()
+    
+    return (v: Var)=>{
+        if (m.has(v)) return m.get(v)!
+        
+        if (extras.get(v) === undefined){
+            extras = extras.set(v, new TypeBox()) 
+        }
+
+        return extras.get(v)!.toExpr()
+    }
+}
+
+function map(expr: Expr, fn: FullVarMap): Expr{
+    if (expr.op instanceof Var){
+        return fn(expr.op)
+    }
+
+    return expr.map(
+        c=>map(c, fn)
+    )
+}
+
+type FullVarMap = (_:Var)=>Expr
 

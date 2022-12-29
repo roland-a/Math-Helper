@@ -1,58 +1,44 @@
 import { formula } from "../../equivalences/Formula";
 import { Simplifier } from "../../equivalences/Simplifier";
-import { pool } from "../../misc/Pooler";
-import { Expr } from "../Expr";
-import { ExprBase, Input } from "../ExprBase";
+import { Op } from "../Op";
 import { Add } from "./Add";
 import { Mult } from "./Mult";
 import { Pow } from "./Pow";
 
-export class Div extends ExprBase{
+export const Div = new class extends Op{
     readonly generallyUnambigious = true
 
-    static equivs = ()=> [
+    equivs = ()=> [
         formula(
-            new Div("x", 1),
+            Div.toExpr("x", 1),
             "x"
         ),
         formula(
-            new Div("a", "b"),
-            new Mult("a", new Pow("b", -1))
+            Div.toExpr("a", "b"),
+            Mult.toExpr("a", Pow.toExpr("b", -1))
         ),
         formula(
-            new Div("x", "x"),
+            Div.toExpr("x", "x"),
             1
         ),
         formula(
-            new Div("a", new Div("b", "c")),
-            new Div(new Mult("a", "c"), "b")
+            Div.toExpr("a", Div.toExpr("b", "c")),
+            Div.toExpr(Mult.toExpr("a", "c"), "b")
         ),
         formula(
-            new Add(new Div("a", "c"), new Div("b", "c")),
-            new Div(new Add("a", "b"), "c"),
+            Add.toExpr(Div.toExpr("a", "c"), Div.toExpr("b", "c")),
+            Div.toExpr(Add.toExpr("a", "b"), "c"),
         ),
         formula(
-            new Mult(new Div("a", "b"), new Div("c", "d")),
-            new Div(new Mult("a", "c"), new Mult("b", "d")),
+            Mult.toExpr(Div.toExpr("a", "b"), Div.toExpr("c", "d")),
+            Div.toExpr(Mult.toExpr("a", "c"), Mult.toExpr("b", "d")),
         ),
         new Simplifier(Div, (l,r)=>l/r),
     ]
 
     readonly cssName = "Div"
 
-    constructor(left: Expr, right: Expr) { 
-        super([left, right]) 
-
-        if (this.children.some(c=>c.type=="boolean")) throw new Error()
-
-        return pool(this)
+    childAmbigious(e: Op, i: number): boolean | null {
+        return e == Div
     }
-
-    childAmbigious(e: Expr, i: number): boolean | null {
-        return e instanceof Div
-    }
-}
-
-function Formula(arg0: Div, arg1: number) {
-    throw new Error("Function not implemented.");
 }

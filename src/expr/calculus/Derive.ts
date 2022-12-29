@@ -8,17 +8,18 @@ import { Mult } from "../basic/Mult";
 import { Pow } from "../basic/Pow";
 import { TypeBox } from "../TypeBox";
 import { Expr } from "../Expr";
-import { convert, ExprBase, Input } from "../ExprBase";
+import { Op } from "../Op";
 import { formula } from "../../equivalences/Formula";
 import { Div } from "../basic/Div";
 import { Sub } from "../basic/Sub";
 import { Limit } from "./Limit";
 import { Assign } from "./Assign";
 import { isConst } from "../helper";
+import { Num } from "../basic/Num";
 
 let consts = new class extends EquivGen{
     generate(selected: Expr, subSelected: Set<number>): Expr|null {
-        if (!(selected instanceof Derive)) return null
+        if (!(selected.is(Derive))) return null
 
         let fn = selected.get(0)
         let varr = selected.get(1)
@@ -27,20 +28,20 @@ let consts = new class extends EquivGen{
 
         if (!isConst(fn, varr)) return null
 
-        return 0
+        return new Num(0).toExpr()
     }
 }
 
-export class Derive extends ExprBase{
-    static equivs = ()=> [
+export const Derive = new class extends Op{
+    equivs = ()=> [
         consts,
         formula(
-            new Derive("f", "x"),
-            new Limit("h", 0, new Div(new Sub(new Assign("f", "x", new Add("x", "h")), "f"), "h"))
+            Derive.toExpr("f", "x"),
+            Limit.toExpr("h", 0, Div.toExpr(Sub.toExpr(Assign.toExpr("f", "x", Add.toExpr("x", "h")), "f"), "h"))
         ),
         formula(
-            new Derive(new Assign("f", "x", "g"), "x"),
-            new Mult(new Assign(new Derive("f", "x"), "x", "g"), new Derive("g", "x"))
+            Derive.toExpr(Assign.toExpr("f", "x", "g"), "x"),
+            Mult.toExpr(Assign.toExpr(Derive.toExpr("f", "x"), "x", "g"), Derive.toExpr("g", "x"))
         ),
     ]
 
@@ -48,20 +49,10 @@ export class Derive extends ExprBase{
 
     readonly cssName = "Derive"
 
-    constructor(func: Expr, varr: TypeBox|string){
-        super([func, varr])
+    childAmbigious(e: Op, i: number): boolean | null {
+        if (e == Assign) return true
 
-        if (!(typeof varr == "string" || varr instanceof TypeBox)) throw new Error()
-
-        if (this.children.some(c=>c.type=="boolean")) throw new Error()
-
-        return pool(this)
-    }
-
-    childAmbigious(e: Expr, i: number): boolean | null {
-        if (e instanceof Assign) return true
-
-        if (e instanceof Pow) return true
+        if (e == Pow) return true
 
         if (i==0) return null
 

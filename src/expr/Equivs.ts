@@ -2,10 +2,10 @@ import { List, Set } from "immutable"
 import { int } from "../misc/Int"
 import { TypeBox } from "./TypeBox"
 import { Expr } from "./Expr"
+import { EquivGen } from "../equivalences/EquivGen"
 import { Div } from "./basic/Div"
 import { Eq } from "./boolean/Eq"
 import { Add } from "./basic/Add"
-import { Class } from "../misc/Class"
 import { Pow } from "./basic/Pow"
 import { Mult } from "./basic/Mult"
 import { Sub } from "./basic/Sub"
@@ -18,7 +18,6 @@ import { Neg } from "./basic/Neg"
 import { Sin } from "./trigonometry/Sin"
 import { Cos } from "./trigonometry/Cos"
 import { E } from "./calculus/E"
-import { EquivGen } from "../equivalences/EquivGen"
 import { Roots } from "./basic/Roots"
 import { And } from "./boolean/And"
 import { Or } from "./boolean/Or"
@@ -28,7 +27,7 @@ import { All } from "./boolean/All"
 
 const free = new class extends EquivGen{
     generate(selected: Expr, subSelected: Set<number>): Expr|null {
-        return new TypeBox()
+        return new TypeBox().toExpr()
     }
 }
 
@@ -67,7 +66,7 @@ function superFlat(e: any): any[]{
 
     let result = [] as any[]
 
-    e.forEach(c=>{
+    e.forEach((c:any)=>{
         superFlat(c).forEach(q=>result.push(q))
     })
 

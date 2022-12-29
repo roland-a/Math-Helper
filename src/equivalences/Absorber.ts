@@ -1,19 +1,20 @@
 import { Set } from "immutable";
+import { PrettyExpr, unprettify } from "../expr/helper";
 import { Expr } from "../expr/Expr";
-import { Class } from "../misc/Class";
+import { Op } from "../expr/Op";
 import { EquivGen } from "./EquivGen";
 
 export class Absorber extends EquivGen{
-    readonly op: Class<Expr>
+    readonly op: Op
     readonly absorber: Expr
 
-    constructor(op: Class<Expr>, absorber: Expr){ super()
+    constructor(op: Op, absorber: PrettyExpr){ super()
         this.op = op
-        this.absorber = absorber
+        this.absorber = unprettify(absorber)
     }
 
     generate(selected: Expr, subSelected: Set<number>): Expr | null {
-        if (!(selected instanceof this.op)) return null
+        if (!(selected.is(this.op))) return null
 
         if (!selected.children.some(c=>c===this.absorber)) return null
 
@@ -21,6 +22,6 @@ export class Absorber extends EquivGen{
 
         if (c.size == 1) return c.get(0)!
 
-        return new this.op(...c)
+        return this.op.toExpr(...c)
     }
 }
