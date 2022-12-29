@@ -1,8 +1,10 @@
-import { Map } from "immutable";
-
+import { List, Map } from "immutable";
 let map = Map<any,any>()
 
 export function pool<T>(value: T): T{
+    if (typeof value != "object") return value
+    if (value == null) return value
+
     let m = toMap(value)
 
     if (!map.has(m)){
@@ -12,14 +14,14 @@ export function pool<T>(value: T): T{
 }
 
 function toMap(value: any): any{
-    if (typeof value != "object") return value
-    if (value == null) return value
+    let m = Map(value)
 
-    let m = Map(Object.keys(value).map(k => [k, value[k]]))
+    m = m.map(c=>{
+        if (c instanceof Array) return List(c)
 
-    m = m.map(c=>toMap(c))
-    m = m.set("__class__", value.constructor)
-   
+        return c
+    })
+
     return m
 }
 

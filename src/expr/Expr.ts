@@ -10,10 +10,12 @@ import { Op } from "./Op";
 export class Expr{
     op: Op
     children: List<Expr>
+    children_
 
     constructor(op: Op, children: List<Expr>){
         this.op = op
         this.children = children
+        this.children_ = children.toArray()
 
         return pool(this)
     }

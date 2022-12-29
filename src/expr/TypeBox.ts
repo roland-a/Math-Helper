@@ -21,6 +21,7 @@ import { Expr } from "./Expr"
 import { Num } from "./basic/Num"
 import { Var } from "./calculus/Var"
 import { PrettyExpr, unprettify } from "./helper"
+import { stringify } from "flatted"
 
 
 export class TypeBox extends Op{
@@ -34,6 +35,8 @@ export class TypeBox extends Op{
     insert(cursorPos:int, e:Expr|char): [TypeBox,int]{
         if (typeof e == "number") throw "numbers not allowed"
         if (typeof e == "string" && e.length != 1) throw "inserted strings must only be single characters"
+
+        if (e instanceof Expr && e.op == this) throw "self reference not allowed"
 
         if (e instanceof Expr && e.op instanceof TypeBox){
             this.contents.splice(cursorPos, 0, e)
@@ -83,6 +86,10 @@ export class TypeBox extends Op{
     }
 
     modifyUi(self: UIExpr): void {
+        console.log(
+            this
+        )
+
         self.overridenContent = List(
             this.contents.map(
                 c=>{
