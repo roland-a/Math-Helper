@@ -25,7 +25,7 @@ let consts = new class extends EquivGen{
         let fn = selected.get(0)
         let varr = selected.get(1)
 
-        if (typeof varr != "string") return null
+        if (!varr.type.canBe(Type.Var)) return null
 
         if (!isConst(fn, varr)) return null
 

@@ -4,21 +4,17 @@ import { Associate } from "../../equivalences/Associative";
 import { Communative } from "../../equivalences/Communative";
 import { Distribute } from "../../equivalences/Distribute";
 import { Simplifier } from "../../equivalences/Simplifier";
-import { Class } from "../../misc/Class";
 import { int } from "../../misc/Int";
-import { pool } from "../../misc/Pooler";
 import { Derive } from "../calculus/Derive";
 import { Expr } from "../Expr";
 import { Op } from "../Op";
 
 import { Add } from "./Add";
 import { Integrate } from "../calculus/Integrate";
-import { Assign } from "../calculus/Assign";
-import { Limit } from "../calculus/Limit";
 import { Absorber } from "../../equivalences/Absorber";
 import { Anhiliator } from "../../equivalences/Anhiliator";
 import { isConst, precident } from "../helper";
-import { UIExpr } from "../../ui/UiExpr";
+import { Type } from "../Type";
 
 const integrate = new class extends EquivGen{
     generate(selected: Expr, subSelected: Set<number>): Expr|null {
@@ -51,7 +47,7 @@ const moveOut = new class extends EquivGen{
             varr = selected.get(3)
         }
 
-        if (typeof varr != "string") return null
+        if (!varr.type.canBe(Type.Var)) return null
 
         let mults = selected.get(mainIndex)
         

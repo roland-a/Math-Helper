@@ -29,7 +29,7 @@ class FormulaSide extends EquivGen{
     }
 
     type(){
-        if (typeof this.from == "string") return "redundant"
+        if (this.from.op instanceof Var) return "redundant"
 
         return "normal"
     }

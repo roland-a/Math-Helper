@@ -46,7 +46,7 @@ class BothSides extends EquivGen{
 
 const eqImm = new class extends EquivGen{
     generate(selected: Expr, subSelected: Set<number>): Expr|null {
-        if (typeof selected == "boolean" && selected == true){
+        if (selected == new Bool(true).toExpr()){
             let t = new TypeBox()
 
             return Eq.toExpr(t.toExpr(), t.toExpr())

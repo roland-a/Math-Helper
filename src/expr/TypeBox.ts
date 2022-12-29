@@ -36,7 +36,6 @@ export class TypeBox extends Op{
     }
 
     insert(cursorPos:int, e:Expr|char): [TypeBox,int]{
-        if (typeof e == "number") throw "numbers not allowed"
         if (typeof e == "string" && e.length != 1) throw "inserted strings must only be single characters"
 
         if (e instanceof Expr && e.op == this) throw "self reference not allowed"

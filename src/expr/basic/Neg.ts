@@ -4,6 +4,7 @@ import { Derive } from "../calculus/Derive"
 import { Integrate } from "../calculus/Integrate"
 import { Op } from "../Op"
 import { Mult } from "./Mult"
+import { Num } from "./Num"
 
 export const Neg = new class extends Op{
     equivs = ()=> [
@@ -28,6 +29,6 @@ export const Neg = new class extends Op{
     readonly cssName = "Neg"
 
     childAmbigious(e: Op, i: number): boolean | null {
-        return typeof e == "number" && e < 0
+        return e instanceof Num && e.inner < 0
     }
 }
