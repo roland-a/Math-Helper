@@ -47,7 +47,7 @@ export class TypeBox extends Op{
         }
   
         //tries to move content behind inside typebox
-        if (e instanceof Expr && e.children.find(c=>c instanceof TypeBox) !== undefined){
+        if (e instanceof Expr && e.children.some(c=>c.op instanceof TypeBox)){
             let moveStart = cursorPos
             while (true){
                 if (moveStart == 0) break
@@ -59,15 +59,15 @@ export class TypeBox extends Op{
     
                 moveStart -= 1
             }
-    
+
             let movedContent = this.contents.splice(moveStart, cursorPos-moveStart, e)
     
             //typebox that will contain the moved contnent
             let boxWithMovedContent = e.children.find(c=>c.op instanceof TypeBox)!.op as TypeBox
 
             //typebox that the cursor will be on
-            let boxWithCursor = e.children.find(c=>c.op instanceof TypeBox && c.op != boxWithMovedContent)!.op as TypeBox ?? boxWithMovedContent
-            
+            let boxWithCursor = e.children.find(c=>c.op instanceof TypeBox && c.op != boxWithMovedContent)?.op as TypeBox ?? boxWithMovedContent
+
             boxWithMovedContent.contents = movedContent
     
             return [boxWithCursor, 0]
@@ -88,10 +88,6 @@ export class TypeBox extends Op{
     }
 
     modifyUi(self: UIExpr): void {
-        console.log(
-            this
-        )
-
         self.overridenContent = List(
             this.contents.map(
                 c=>{

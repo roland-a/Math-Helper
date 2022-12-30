@@ -70,7 +70,7 @@ function tryCreateMatchMap(expr: Expr, side: Expr): Map<Var, Expr>|null{
 
     let result: Map<Var, Expr>|null = Map()
     for (let i = 0; i < expr.children.size; i++){
-        let m = tryCreateMatchMap(expr.children.get(i)!, side.children.get(i)!)
+        let m = tryCreateMatchMap(expr.get(i), side.get(i))
 
         if (m == null) return null
 
